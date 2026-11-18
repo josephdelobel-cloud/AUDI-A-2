@@ -2,73 +2,115 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Audi A2 e-tron 326 ch</title>
+<title>Audi A2 e-tron 326 ch - Paris</title>
 <style>
-  body { margin: 0; overflow: hidden; background: #8bb4d9; font-family: Arial, sans-serif; }
+  body { margin: 0; overflow: hidden; background: #0f172a; font-family: Arial, sans-serif; }
   canvas { display: block; width: 100vw; height: 100vh; }
-  #ui { position: absolute; top: 15px; left: 15px; background: rgba(15,23,42,0.88); color: white; padding: 15px; border-radius: 10px; border-left: 4px solid #bb0a30; }
-  h1 { margin: 0 0 5px 0; font-size: 18px; }
+  .box { position: absolute; background: rgba(15,23,42,0.92); color: white; padding: 14px 18px; border-radius: 10px; z-index: 10; }
+  .top { top: 15px; left: 15px; border-left: 4px solid #bb0a30; }
+  .bot { bottom: 20px; right: 20px; border-bottom: 4px solid #bb0a30; min-width: 240px; }
+  h1 { margin: 0 0 6px 0; font-size: 17px; }
   p { margin: 4px 0; font-size: 13px; color: #cbd5e1; }
-  #hud { position: absolute; bottom: 20px; right: 20px; background: rgba(15,23,42,0.92); color: white; padding: 15px 22px; border-radius: 12px; border-bottom: 4px solid #bb0a30; min-width: 220px; }
-  #speed { font-size: 34px; font-weight: bold; }
-  .unit { font-size: 14px; color: #60a5fa; }
-  .bar { width: 100%; height: 8px; background: #334155; border-radius: 4px; margin: 6px 0; overflow: hidden; }
-  #hp-fill { height: 100%; width: 0%; background: #ef4444; }
-  #bat-fill { height: 100%; width: 100%; background: #22c55e; }
-  .row { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; }
+  .spd { font-size: 36px; font-weight: bold; }
+  .row { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-top: 8px; }
+  .bar { width: 100%; height: 8px; background: #334155; border-radius: 4px; margin-top: 4px; overflow: hidden; }
+  .fill { height: 100%; width: 0%; background: #ef4444; }
 </style>
 </head>
 <body>
-<div id="ui">
-  <h1>AUDI A2 e-tron (326 ch)</h1>
-  <p><strong>Flèches</strong> ou <strong>Z Q S D</strong> : Piloter</p>
-  <p><strong>Espace</strong> : Frein régénératif</p>
-  <p><strong>Stations TotalEnergies</strong> : Ralentir à droite</p>
+<div class="box top">
+  <h1>AUDI A2 e-tron • PARIS (326 ch)</h1>
+  <p><b>Flèches</b> ou <b>Z Q S D</b> : Accélérer & Tourner</p>
+  <p><b>Espace</b> : Freiner | <b>TotalEnergies</b> : Ralentir à droite</p>
 </div>
-
-<div id="hud">
-  <div id="speed">0 <span class="unit">km/h</span></div>
-  <div class="row"><span>Puissance</span><span id="hp-txt">0 / 326 ch</span></div>
-  <div class="bar"><div id="hp-fill"></div></div>
-  <div class="row"><span>🔋 Autonomie</span><span id="bat-txt">100 % (450 km)</span></div>
-  <div class="bar"><div id="bat-fill"></div></div>
-  <div id="status" style="font-size:11px; color:#94a3b8; text-align:right; margin-top:4px;">quattro READY</div>
+<div class="box bot">
+  <div class="spd"><span id="s">0</span> <span style="font-size:14px;color:#60a5fa">km/h</span></div>
+  <div class="row"><span>Puissance</span><span id="h">0 / 326 ch</span></div>
+  <div class="bar"><div class="fill" id="hf"></div></div>
+  <div class="row"><span>🔋 Autonomie</span><span id="b">100 % (450 km)</span></div>
+  <div class="bar"><div class="fill" id="bf" style="width:100%;background:#22c55e"></div></div>
+  <div id="st" style="font-size:11px;color:#94a3b8;text-align:right;margin-top:6px">PARIS • quattro READY</div>
 </div>
-
 <canvas id="c"></canvas>
-
 <script>
-const c = document.getElementById('c');
-const ctx = c.getContext('2d');
-let W = c.width = window.innerWidth;
-let H = c.height = window.innerHeight;
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+let W = c.width = window.innerWidth, H = c.height = window.innerHeight;
 window.onresize = () => { W = c.width = window.innerWidth; H = c.height = window.innerHeight; };
 
-const segLen = 200, roadW = 2000, camH = 1000, camD = 0.84, segs = [];
-for (let i = 0; i < 1200; i++) {
-  let curve = (i > 80 && i < 220) ? 2 : (i > 300 && i < 480) ? -2.5 : (i > 600 && i < 750) ? 1.8 : 0;
+const segs = [], segLen = 200, roadW = 2200;
+for (let i = 0; i < 1500; i++) {
+  let cv = (i > 60 && i < 180) ? 1.8 : (i > 250 && i < 400) ? -2.2 : (i > 480 && i < 620) ? 1.5 : 0;
   segs.push({
-    i: i, curve: curve,
-    y1: Math.sin(i / 45) * 250, y2: Math.sin((i + 1) / 45) * 250,
-    dark: Math.floor(i / 3) % 2 === 0,
-    charger: i > 30 && i % 130 === 0
+    i: i, cv: cv,
+    dk: Math.floor(i / 3) % 2 === 0,
+    ch: i > 20 && i % 110 === 0,
+    bldg: i % 8 === 0
   });
 }
 
 let pos = 0, px = 0, spd = 0, bat = 100, last = performance.now();
-const keys = {};
-window.onkeydown = e => keys[e.key.toLowerCase()] = true;
-window.onkeyup = e => keys[e.key.toLowerCase()] = false;
+const k = {};
+window.onkeydown = e => k[e.key.toLowerCase()] = true;
+window.onkeyup = e => k[e.key.toLowerCase()] = false;
+
+function drawEiffelTower(cx, cy) {
+  ctx.save();
+  ctx.strokeStyle = "#f59e0b";
+  ctx.lineWidth = 3;
+  ctx.shadowColor = "#fbbf24";
+  ctx.shadowBlur = 14;
+
+  // Silhouette Tour Eiffel
+  ctx.beginPath();
+  ctx.moveTo(cx - 60, cy);
+  ctx.quadraticCurveTo(cx - 24, cy - 85, cx - 9, cy - 210);
+  ctx.lineTo(cx + 9, cy - 210);
+  ctx.quadraticCurveTo(cx + 24, cy - 85, cx + 60, cy);
+  ctx.stroke();
+
+  // Arche du bas
+  ctx.beginPath();
+  ctx.arc(cx, cy, 28, Math.PI, 0);
+  ctx.stroke();
+
+  // 1er et 2ème étages
+  ctx.fillStyle = "#f59e0b";
+  ctx.fillRect(cx - 38, cy - 60, 76, 5);
+  ctx.fillRect(cx - 21, cy - 125, 42, 4);
+
+  // Antenne et phare lumineux au sommet
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - 210);
+  ctx.lineTo(cx, cy - 240);
+  ctx.stroke();
+
+  // Faisceau lumineux tournant
+  const beamAngle = Math.sin(performance.now() * 0.0015) * 0.8;
+  const grad = ctx.createLinearGradient(cx, cy - 230, cx + Math.sin(beamAngle) * 360, cy - 190);
+  grad.addColorStop(0, "rgba(254, 240, 138, 0.55)");
+  grad.addColorStop(1, "rgba(254, 240, 138, 0)");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - 230);
+  ctx.lineTo(cx + Math.sin(beamAngle - 0.1) * 400, cy - 160);
+  ctx.lineTo(cx + Math.sin(beamAngle + 0.1) * 400, cy - 220);
+  ctx.fill();
+
+  ctx.restore();
+}
 
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
 
-  const acc = keys['arrowup'] || keys['z'];
-  const brk = keys[' '] || keys['arrowdown'] || keys['s'];
-  const maxSpd = bat > 0 ? 12600 : 2100; // 210 km/h max
+  const acc = k['arrowup'] || k['z'];
+  const brk = k[' '] || k['arrowdown'] || k['s'];
+  const lft = k['arrowleft'] || k['q'];
+  const rgt = k['arrowright'] || k['d'];
 
+  const maxS = bat > 0 ? 12600 : 2100;
   let hp = 0;
+
   if (acc && bat > 0) {
     spd += 8500 * dt;
     hp = Math.min(326, Math.round(140 + (spd / 12600) * 186));
@@ -79,129 +121,129 @@ function loop(now) {
     spd -= 2500 * dt;
     if (spd > 200) hp = -40;
   }
-  spd = Math.max(0, Math.min(spd, maxSpd));
+  spd = Math.max(0, Math.min(spd, maxS));
   pos = (pos + spd * dt) % (segs.length * segLen);
 
-  const ratio = spd / 12600;
-  if (keys['arrowleft'] || keys['q']) px -= 2.1 * ratio * dt;
-  if (keys['arrowright'] || keys['d']) px += 2.1 * ratio * dt;
+  // DIRECTION RÉACTIVE : permet de tourner et changer de file librement
+  const steer = (lft ? -1 : (rgt ? 1 : 0));
+  if (spd > 15) {
+    px += steer * 1.95 * dt;
+  }
 
-  const baseIdx = Math.floor(pos / segLen) % segs.length;
-  const baseSeg = segs[baseIdx];
-  px = Math.max(-2.2, Math.min(2.2, px - baseSeg.curve * ratio * 1.4 * dt));
+  const idx = Math.floor(pos / segLen) % segs.length;
+  const bs = segs[idx];
+  const rat = spd / 12600;
+  px = Math.max(-0.95, Math.min(0.95, px - bs.cv * rat * 0.45 * dt));
 
-  // Recharge TotalEnergies
-  let charging = false;
+  // Recharge TotalEnergies à droite
+  let chg = false;
   for (let o = -3; o <= 3; o++) {
-    let s = segs[(baseIdx + o + segs.length) % segs.length];
-    if (s.charger && px > 0.5 && spd < 4200) charging = true;
+    let s = segs[(idx + o + segs.length) % segs.length];
+    if (s.ch && px > 0.35 && spd < 4500) chg = true;
   }
 
-  if (charging) {
+  if (chg) {
     bat = Math.min(100, bat + 35 * dt);
-    document.getElementById('status').innerText = "⚡ RECHARGE TOTALENERGIES";
+    document.getElementById('st').innerText = "⚡ RECHARGE TOTALENERGIES PARIS";
   } else if (acc && bat > 0) {
-    bat = Math.max(0, bat - (0.4 + ratio * ratio * 1.8) * dt);
-    document.getElementById('status').innerText = hp > 280 ? "BOOST 326 ch" : "DRIVE quattro";
+    bat = Math.max(0, bat - (0.4 + rat * rat * 1.8) * dt);
+    document.getElementById('st').innerText = hp > 280 ? "BOOST 326 ch" : "PARIS • quattro";
   } else if (spd > 200) {
-    bat = Math.min(100, bat + (brk ? 0.4 : 0.15) * ratio * dt);
-    document.getElementById('status').innerText = "♻️ RÉGÉNÉRATION";
+    bat = Math.min(100, bat + (brk ? 0.4 : 0.15) * rat * dt);
+    document.getElementById('st').innerText = "♻️ RÉGÉNÉRATION ÉNERGIE";
   }
 
-  // Mise à jour HUD
-  document.getElementById('speed').innerHTML = Math.round(spd / 60) + ' <span class="unit">km/h</span>';
-  document.getElementById('hp-txt').innerText = (hp >= 0 ? hp + ' / 326 ch' : hp + ' ch (REGEN)');
-  document.getElementById('hp-fill').style.width = Math.min(100, (Math.abs(hp) / 326) * 100) + '%';
-  document.getElementById('bat-txt').innerText = Math.ceil(bat) + ' % (' + Math.round((bat / 100) * 450) + ' km)';
-  document.getElementById('bat-fill').style.width = bat + '%';
+  document.getElementById('s').innerText = Math.round(spd / 60);
+  document.getElementById('h').innerText = hp >= 0 ? hp + ' / 326 ch' : hp + ' ch (REGEN)';
+  document.getElementById('hf').style.width = Math.min(100, (Math.abs(hp) / 326) * 100) + '%';
+  document.getElementById('b').innerText = Math.ceil(bat) + ' % (' + Math.round((bat / 100) * 450) + ' km)';
+  document.getElementById('bf').style.width = bat + '%';
 
-  // Ciel et sol
-  ctx.fillStyle = "#8bb4d9"; ctx.fillRect(0, 0, W, H * 0.5);
-  ctx.fillStyle = "#b5aa94"; ctx.fillRect(0, H * 0.5, W, H * 0.5);
-  ctx.fillStyle = "#4a7c9b"; ctx.fillRect(W * 0.55, H * 0.5, W * 0.45, H * 0.5);
+  // Ciel crépuscule parisien
+  const sky = ctx.createLinearGradient(0, 0, 0, H * 0.5);
+  sky.addColorStop(0, "#0f172a");
+  sky.addColorStop(0.6, "#1e3a8a");
+  sky.addColorStop(1, "#f97316");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H * 0.5);
 
-  // Route 3D
-  let maxY = H, x = 0, dx = -(baseSeg.curve * ((pos % segLen) / segLen));
-  for (let n = 0; n < 150; n++) {
-    const s = segs[(baseIdx + n) % segs.length];
-    const z1 = Math.max(10, (s.i * segLen) - (pos - (s.i < baseIdx ? segs.length * segLen : 0)));
+  // Tour Eiffel au fond de l'avenue
+  drawEiffelTower(W * 0.5 - px * 140, H * 0.5);
+
+  // Sol trottoirs parisiens
+  ctx.fillStyle = "#475569";
+  ctx.fillRect(0, H * 0.5, W, H * 0.5);
+
+  // Rendu Avenue Parisienne 3D
+  let maxY = H, x = 0, dx = -(bs.cv * ((pos % segLen) / segLen));
+  for (let n = 0; n < 130; n++) {
+    const s = segs[(idx + n) % segs.length];
+    const z1 = Math.max(10, (s.i * segLen) - (pos - (s.i < idx ? segs.length * segLen : 0)));
     const z2 = z1 + segLen;
-    const sc1 = camD / z1, sc2 = camD / z2;
+    const sc1 = 0.84 / z1, sc2 = 0.84 / z2;
 
     const x1 = W / 2 + sc1 * ((px * roadW) - x) * W / 2;
-    const y1 = H / 2 - sc1 * (s.y1 - baseSeg.y1 - camH) * H / 2;
+    const y1 = H / 2 + sc1 * 1000 * H / 2;
     const w1 = sc1 * roadW * W / 2;
 
     const x2 = W / 2 + sc2 * ((px * roadW) - x - dx) * W / 2;
-    const y2 = H / 2 - sc2 * (s.y2 - baseSeg.y1 - camH) * H / 2;
+    const y2 = H / 2 + sc2 * 1000 * H / 2;
     const w2 = sc2 * roadW * W / 2;
 
-    x += dx; dx += s.curve;
+    x += dx; dx += s.cv;
     if (y2 >= maxY || y2 >= y1) continue;
 
-    // Herbe & Vibreurs
-    ctx.fillStyle = s.dark ? "#b5aa94" : "#aba08a";
+    ctx.fillStyle = s.dk ? "#64748b" : "#525e70";
     ctx.fillRect(0, y2, W, y1 - y2);
 
-    ctx.fillStyle = s.dark ? "#16389c" : "#ffffff";
-    ctx.beginPath(); ctx.moveTo(x1 - w1 * 1.12, y1); ctx.lineTo(x1 + w1 * 1.12, y1); ctx.lineTo(x2 + w2 * 1.12, y2); ctx.lineTo(x2 - w2 * 1.12, y2); ctx.fill();
+    ctx.fillStyle = s.dk ? "#cbd5e1" : "#94a3b8";
+    ctx.beginPath(); ctx.moveTo(x1 - w1 * 1.06, y1); ctx.lineTo(x1 + w1 * 1.06, y1); ctx.lineTo(x2 + w2 * 1.06, y2); ctx.lineTo(x2 - w2 * 1.06, y2); ctx.fill();
 
-    // Asphalte
-    ctx.fillStyle = s.dark ? "#2b2d31" : "#25272b";
+    ctx.fillStyle = s.dk ? "#1e293b" : "#172033";
     ctx.beginPath(); ctx.moveTo(x1 - w1, y1); ctx.lineTo(x1 + w1, y1); ctx.lineTo(x2 + w2, y2); ctx.lineTo(x2 - w2, y2); ctx.fill();
 
-    // Ligne blanche
-    if (s.dark) {
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath(); ctx.moveTo(x1 - w1 * 0.02, y1); ctx.lineTo(x1 + w1 * 0.02, y1); ctx.lineTo(x2 + w2 * 0.02, y2); ctx.lineTo(x2 - w2 * 0.02, y2); ctx.fill();
+    if (s.dk) {
+      ctx.fillStyle = "#f8fafc";
+      [-0.33, 0.33].forEach(lane => {
+        ctx.beginPath();
+        ctx.moveTo(x1 + w1 * lane - w1 * 0.015, y1);
+        ctx.lineTo(x1 + w1 * lane + w1 * 0.015, y1);
+        ctx.lineTo(x2 + w2 * lane + w2 * 0.015, y2);
+        ctx.lineTo(x2 + w2 * lane - w2 * 0.015, y2);
+        ctx.fill();
+      });
     }
 
-    // Station TotalEnergies
-    if (s.charger) {
+    if (s.bldg) {
+      const bscl = sc1 * 160000;
+      if (bscl > 10 && bscl < 600) {
+        ctx.fillStyle = "#d6cfc2";
+        ctx.fillRect(x1 - w1 * 1.15 - bscl * 1.4, y1 - bscl * 1.8, bscl * 1.4, bscl * 1.8);
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(x1 - w1 * 1.15 - bscl * 1.4, y1 - bscl * 2.1, bscl * 1.4, bscl * 0.3);
+        ctx.fillStyle = "#fef08a";
+        ctx.fillRect(x1 - w1 * 1.15 - bscl * 1.1, y1 - bscl * 1.4, bscl * 0.25, bscl * 0.35);
+        ctx.fillRect(x1 - w1 * 1.15 - bscl * 0.6, y1 - bscl * 1.4, bscl * 0.25, bscl * 0.35);
+
+        if (!s.ch) {
+          ctx.fillStyle = "#cfc7b8";
+          ctx.fillRect(x1 + w1 * 1.15, y1 - bscl * 1.8, bscl * 1.4, bscl * 1.8);
+          ctx.fillStyle = "#334155";
+          ctx.fillRect(x1 + w1 * 1.15, y1 - bscl * 2.1, bscl * 1.4, bscl * 0.3);
+          ctx.fillStyle = "#fef08a";
+          ctx.fillRect(x1 + w1 * 1.15 + bscl * 0.3, y1 - bscl * 1.4, bscl * 0.25, bscl * 0.35);
+          ctx.fillRect(x1 + w1 * 1.15 + bscl * 0.8, y1 - bscl * 1.4, bscl * 0.25, bscl * 0.35);
+        }
+      }
+    }
+
+    if (s.ch) {
       const cs = sc1 * 150000;
       if (cs > 8 && cs < 450) {
         const cx = x1 + w1 * 1.25;
-        ctx.fillStyle = "rgba(237,28,36,0.3)"; ctx.beginPath(); ctx.ellipse(x1 + w1 * 0.85, y1, w1 * 0.4, cs * 0.15, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#fff"; ctx.fillRect(cx - cs * 0.5, y1 - cs * 0.95, cs, cs * 0.14);
+        ctx.fillStyle = "rgba(237,28,36,0.35)"; ctx.beginPath(); ctx.ellipse(x1 + w1 * 0.75, y1, w1 * 0.35, cs * 0.15, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(cx - cs * 0.5, y1 - cs * 0.95, cs, cs * 0.14);
         ctx.fillStyle = "#ed1c24"; ctx.fillRect(cx - cs * 0.5, y1 - cs * 0.85, cs, cs * 0.05);
         ctx.fillStyle = "#e2e8f0"; ctx.fillRect(cx - cs * 0.4, y1 - cs * 0.8, cs * 0.06, cs * 0.8); ctx.fillRect(cx + cs * 0.34, y1 - cs * 0.8, cs * 0.06, cs * 0.8);
-        ctx.fillStyle = "#fff"; ctx.fillRect(cx - cs * 0.12, y1 - cs * 0.5, cs * 0.24, cs * 0.5);
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(cx - cs * 0.12, y1 - cs * 0.5, cs * 0.24, cs * 0.5);
         ctx.fillStyle = "#ed1c24"; ctx.fillRect(cx - cs * 0.12, y1 - cs * 0.5, cs * 0.24, cs * 0.12);
-        if (cs > 40) { ctx.font = "bold " + Math.round(cs * 0.09) + "px Arial"; ctx.textAlign = "center"; ctx.fillText("TotalEnergies", cx, y1 - cs * 0.88); }
-      }
-    }
-    maxY = y2;
-  }
-
-  // Dessin Audi A2 e-tron bleu foncé
-  const bx = W / 2, by = H - 40 + (spd > 100 ? Math.sin(now * 0.05) * 1.5 : 0);
-  ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.beginPath(); ctx.ellipse(bx, by + 10, 145, 18, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#111"; ctx.fillRect(bx - 120, by - 35, 34, 45); ctx.fillRect(bx + 86, by - 35, 34, 45);
-  
-  // Carrosserie bleu foncé métallisé
-  ctx.fillStyle = "#102a78";
-  ctx.beginPath(); ctx.moveTo(bx - 118, by - 10); ctx.lineTo(bx - 110, by - 60); ctx.lineTo(bx - 78, by - 108); ctx.lineTo(bx + 78, by - 108); ctx.lineTo(bx + 110, by - 60); ctx.lineTo(bx + 118, by - 10); ctx.fill();
-  
-  // Vitre arrière
-  ctx.fillStyle = "#0f172a";
-  ctx.beginPath(); ctx.moveTo(bx - 72, by - 102); ctx.lineTo(bx + 72, by - 102); ctx.lineTo(bx + 90, by - 64); ctx.lineTo(bx - 90, by - 64); ctx.fill();
-  
-  // Bandeau LED rouge
-  ctx.fillStyle = brk ? "#ff2a44" : "#d9001b"; ctx.fillRect(bx - 102, by - 58, 204, 7);
-  
-  // 4 anneaux Audi
-  ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
-  [-15, -5, 5, 15].forEach(rx => { ctx.beginPath(); ctx.arc(bx + rx, by - 43, 5.5, 0, Math.PI * 2); ctx.stroke(); });
-
-  // Câble TotalEnergies si en charge
-  if (charging) {
-    ctx.strokeStyle = "#ed1c24"; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.moveTo(bx + 112, by - 45); ctx.quadraticCurveTo(bx + 160, by - 20, bx + 205, by - 55); ctx.stroke();
-  }
-
-  requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
-</script>
-</body>
-</html>
