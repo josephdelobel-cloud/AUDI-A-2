@@ -97,9 +97,17 @@ function loop(now){
       x.fillStyle="#cbd5e1";x.fillRect(x1-w1*1.05,y1-(y1-y2)*2,w1*.04,(y1-y2)*2);
       x.fillStyle="#f97316";x.beginPath();x.moveTo(x1-w1*.96,y1);x.lineTo(x1-w1*.91,y1);x.lineTo(x2-w2*.91,y2);x.lineTo(x2-w2*.96,y2);x.fill();
       x.fillStyle="#e2e8f0";x.beginPath();x.moveTo(x1+w1*.91,y1);x.lineTo(x1+w1*.96,y1);x.lineTo(x2+w2*.96,y2);x.lineTo(x2+w2*.91,y2);x.fill();
-      if(s.dk){x.fillStyle="#fff";[-.33,.33].forEach(l=>{x.beginPath();x.moveTo(x1+w1*l-w1*.016,y1);x.lineTo(x1+w1*l+w1*.016,y1);x.lineTo(x2+w2*l+w2*.016,y2);x.lineTo(x2+w2*l-w2*.016,y2);x.fill()})}
+      if(s.dk){x.fillStyle="#fff";[-.33,.33].forEach(l=>{x.beginPath();x.moveTo(x1+w1*l-w1*.016,y1);x.lineTo(x1+w1*l+w1*.016,y1);x.lineTo(x2+w2*l+w2*.015,y2);x.lineTo(x2+w2*l-w2*.015,y2);x.fill()})}
       if(s.rm>0||sn.rm>0){x.fillStyle=s.dk?"#facc15":"#fff";x.beginPath();x.moveTo(x1+w1,y1);x.lineTo(x1+w1*(1+s.rm*.22),y1);x.lineTo(x2+w2*(1+sn.rm*.22),y2);x.lineTo(x2+w2,y2);x.fill();x.fillStyle="#334155";x.beginPath();x.moveTo(x1+w1*(1+s.rm*.22),y1);x.lineTo(x1+w1*(1+s.rm*1.2),y1);x.lineTo(x2+w2*(1+sn.rm*1.2),y2);x.lineTo(x2+w2*(1+sn.rm*.22),y2);x.fill()}
     }
     if(s.sg){const ss=sc1*22e4;if(ss>6&&ss<650){const sx=x1+w1*1.15;x.fillStyle="#cbd5e1";x.fillRect(sx-ss*.05,y1-ss,ss*.1,ss);x.fillStyle="#1d4ed8";x.fillRect(sx-ss*.95,y1-ss*1.6,ss*1.9,ss*.68);x.strokeStyle="#fff";x.lineWidth=4;x.strokeRect(sx-ss*.95,y1-ss*1.6,ss*1.9,ss*.68);if(ss>20){x.fillStyle="#fff";x.font="bold "+Math.round(ss*.125)+"px Arial";x.textAlign="center";x.fillText("SORTIE ↗ TOTALENERGIES 200m",sx,y1-ss*1.22)}}}
     if(s.trA){const ts=sc1*15e4;if(ts>6&&ts<500){const tx=x1+w1*2.65;x.fillStyle="#78350f";x.fillRect(tx-ts*.07,y1-ts*.45,ts*.14,ts*.45);x.fillStyle=ngt?"#064e3b":"#16a34a";x.beginPath();x.arc(tx,y1-ts*.65,ts*.36,0,Math.PI*2);x.fill()}}
     if(s.ch)drawStation(x1,y1,w1,sc1);
+    tr.forEach(v=>{const vi=Math.min(114,Math.max(0,Math.floor(v.z/L)));if(vi===n){const p=pts[vi],vx=p.x1+v.ln*p.w1,w=p.sc1*(v.tk?1950:1500),h=p.sc1*(v.tk?2900:1100);if(w>4){x.save();x.translate(vx,p.y1);x.fillStyle="rgba(0,0,0,.55)";x.beginPath();x.ellipse(0,4,w*.56,h*.08,0,0,Math.PI*2);x.fill();x.fillStyle="#111";x.fillRect(-w*.46,-h*.22,w*.17,h*.22);x.fillRect(w*.29,-h*.22,w*.17,h*.22);x.fillStyle=v.cl;x.fillRect(-w*.48,-h,w*.96,h*.86);if(v.tk){x.strokeStyle="#94a3b8";x.lineWidth=1.5;x.strokeRect(-w*.42,-h*.94,w*.4,h*.74);x.strokeRect(w*.02,-h*.94,w*.4,h*.74);x.fillStyle="#ef4444";x.fillRect(-w*.45,-h*.14,w*.22,h*.05);x.fillRect(w*.23,-h*.14,w*.22,h*.05);if(w>16){x.strokeStyle="#1e293b";x.lineWidth=2;x.beginPath();x.arc(0,-h*.56,w*.13,0,Math.PI*2);x.stroke();x.fillStyle="#111";x.font="bold "+Math.round(w*.1)+"px Arial";x.textAlign="center";x.fillText("MERCEDES",0,-h*.8)}}else{x.fillStyle="#0f172a";x.fillRect(-w*.36,-h*.9,w*.72,h*.36);x.fillStyle="#ff1e1e";x.fillRect(-w*.44,-h*.48,w*.88,h*.07)}x.restore()}}});
+  }
+  drawAudi(st,brk,rev,chg);requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
