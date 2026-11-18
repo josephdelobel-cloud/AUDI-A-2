@@ -88,7 +88,7 @@
 </head>
 <body>
 <div id="scene">
-  <img id="bg" src="image.png" onerror="if(this.src.endsWith('.png'))this.src='image.jpg';else if(this.src.endsWith('.jpg'))this.src='image';else this.onerror=null;" alt="Audi A2 e-tron">
+  <img id="bg" src="image.png" onerror="const t=['image.jpg','image.jpeg','Image.png','Image.jpg','Image.jpeg','image.webp','image'];let i=t.indexOf(this.getAttribute('src'));if(i<t.length-1)this.src=t[i+1];else this.onerror=null;" alt="Audi A2 e-tron">
   <div id="alert">⚠️ BATTERIE FAIBLE • RECHARGE CONSEILLÉE</div>
   <div id="u">
     <b style="color:#60a5fa">AUDI A2 e-tron • AUTOROUTE A1 / A25</b><br>
