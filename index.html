@@ -2,19 +2,31 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Audi A2 e-tron Autoroute France</title>
+<title>Audi A2 e-tron • Autoroute A1/A25</title>
 <style>
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#1e3a8a;font-family:Arial,sans-serif}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#1e3a8a;font-family:'Segoe UI',Arial,sans-serif}
 canvas{display:block;width:100%;height:100%}
-#u{position:absolute;top:14px;left:14px;background:rgba(15,23,42,.92);color:#fff;padding:14px 20px;border-radius:12px;border:2px solid #fff;border-left:8px solid #bb0a30;font-size:14px;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.5)}
-#h{position:absolute;bottom:14px;right:14px;background:rgba(15,23,42,.92);color:#fff;padding:14px 20px;border-radius:12px;border:2px solid #fff;border-bottom:6px solid #bb0a30;font-size:15px;font-weight:bold;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.5)}
-#cb{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:22px;font-size:16px;font-weight:bold;display:none;border:2px solid #fff}
+#u{position:absolute;top:16px;left:16px;background:rgba(15,23,42,.82);backdrop-filter:blur(8px);color:#fff;padding:12px 18px;border-radius:12px;border:1px solid rgba(255,255,255,.25);font-size:13px;line-height:1.45}
+#batBox{position:absolute;bottom:20px;left:20px;background:rgba(15,23,42,.85);backdrop-filter:blur(10px);color:#fff;padding:16px 22px;border-radius:16px;border:1px solid rgba(255,255,255,.25);border-left:6px solid #ef4444;min-width:230px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#gtDial{position:absolute;bottom:20px;right:20px;width:164px;height:164px;border-radius:50%;background:radial-gradient(circle,rgba(30,41,59,.9) 55%,rgba(15,23,42,.96) 100%);border:4px solid rgba(255,255,255,.22);box-shadow:0 10px 30px rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff}
+#cb{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 26px;border-radius:24px;font-size:16px;font-weight:bold;display:none;border:2px solid #fff}
 </style>
 </head>
 <body>
-<div id="cb">⚡ RECHARGE ULTRA-RAPIDE TOTALENERGIES</div>
-<div id="u"><b style="color:#60a5fa;font-size:17px">AUDI A2 e-tron • AUTOROUTE FRANCE (326 ch)</b><br><b>Flèches / ZQSD</b> : Piloter | <b>Bas / S</b> : Frein & Recul<br><b>M</b> : Mode | <b>N</b> : Nuit/Jour | <b>H</b> : Klaxon | <b>R</b> : Reset km | <b>V</b> : Bat 10%</div>
-<div id="h"><span id="g" style="background:#bb0a30;padding:3px 8px;border-radius:5px;font-size:16px">D</span> <span id="s" style="font-size:24px">0</span> km/h | <span id="p">0</span>/<span id="mp">326</span> ch<div id="md" style="font-size:12px;color:#ef4444;margin:3px 0">DYNAMIC (210 km/h)</div>🔋 <span id="b">85% (382 km)</span> | 🛣️ <span id="o">0.0</span> km</div>
+<div id="cb">⚡ RECHARGE TOTALENERGIES 300 kW</div>
+<div id="u"><b style="color:#60a5fa">AUDI A2 e-tron • AUTOROUTE A1 / A25</b><br><b>Flèches / ZQSD</b> : Conduire | <b>Bas / S</b> : Frein & Recul<br><b>M</b> : Mode | <b>N</b> : Nuit/Jour | <b>H</b> : Klaxon | <b>R</b> : Reset km | <b>V</b> : Bat 10%</div>
+<div id="batBox">
+  <div id="md" style="font-size:13px;font-weight:bold;color:#ef4444;letter-spacing:.5px">DYNAMIC • 326 ch</div>
+  <div style="font-size:22px;font-weight:bold;margin:4px 0">🔋 <span id="b">85%</span> <span style="font-size:15px;color:#cbd5e1;font-weight:normal">(<span id="rng">382</span> km)</span></div>
+  <div style="width:100%;height:7px;background:#334155;border-radius:4px;overflow:hidden;margin:6px 0"><div id="bBar" style="width:85%;height:100%;background:#4ade80"></div></div>
+  <div style="font-size:14px;color:#e2e8f0">🛣️ Distance : <b id="o">0.0</b> km</div>
+</div>
+<div id="gtDial">
+  <div id="g" style="background:#dc2626;padding:2px 10px;border-radius:6px;font-weight:bold;font-size:15px;margin-bottom:2px">D</div>
+  <div id="s" style="font-size:44px;font-weight:900;line-height:1">0</div>
+  <div style="font-size:12px;color:#94a3b8;letter-spacing:1px;margin-top:2px">KM/H</div>
+  <div style="font-size:11px;color:#60a5fa;margin-top:4px"><span id="p">0</span> ch</div>
+</div>
 <canvas id="c" width="1280" height="720"></canvas>
 <script>
 const c=document.getElementById('c'),x=c.getContext('2d');
@@ -22,31 +34,30 @@ let W=1280,H=720,ac=null,hn=0,mi=2,pos=0,px=0,spd=0,bat=85,dst=0,ngt=0,last=perf
 function fit(){W=c.width=innerWidth||1280;H=c.height=innerHeight||720}onresize=fit;fit();
 function horn(){if(hn)return;hn=1;try{if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type='sawtooth';o.frequency.value=440;g.gain.setValueAtTime(.12,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.3);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.3)}catch(e){}}
 const segs=[],L=200,R=2200,N=600,TL=N*L;
-for(let i=0;i<N;i++){let rm=0,sg=0,ch=0,trA=0,gt=0;if(i==45)gt=1;if(i==340)gt=2;if(i==85)sg=1;if(i>=95&&i<125)rm=(i-95)/30;if(i>=125&&i<=275)rm=1;if(i>275&&i<=305)rm=1-(i-275)/30;if(i==205)ch=1;if(i%6==0)trA=1;segs.push({i,cv:(i>320&&i<430)?1.1:(i>460&&i<560)?-1.3:0,dk:Math.floor(i/3)%2==0,rm,sg,ch,trA,gt})}
-const tr=[{tk:1,z:1800,ln:.62,sp:4800,cl:"#f8fafc"},{tk:0,z:3600,ln:-.1,sp:7600,cl:"#94a3b8"},{tk:0,z:6200,ln:-.62,sp:8800,cl:"#b91c1c"},{tk:1,z:9200,ln:.62,sp:4600,cl:"#e2e8f0"},{tk:1,z:4200,ln:-1.45,sp:-5500,cl:"#ffffff"},{tk:0,z:8400,ln:-1.35,sp:-7200,cl:"#1e293b"}];
-const modes=[{n:"EFFICIENCY (150 km/h)",ms:9000,hp:200,ac:5400,cn:.85,c:"#4ade80"},{n:"COMFORT (180 km/h)",ms:10800,hp:260,ac:6800,cn:1,c:"#60a5fa"},{n:"DYNAMIC (210 km/h)",ms:12600,hp:326,ac:8500,cn:1.15,c:"#ef4444"}];
+for(let i=0;i<N;i++){let rm=0,sg=0,ch=0,trA=0,gt=0;if(i==42)gt=1;if(i==340)gt=2;if(i==85)sg=1;if(i>=95&&i<125)rm=(i-95)/30;if(i>=125&&i<=275)rm=1;if(i>275&&i<=305)rm=1-(i-275)/30;if(i==205)ch=1;if(i%4==0)trA=1;segs.push({i,cv:(i>320&&i<430)?1.1:(i>460&&i<560)?-1.3:0,dk:Math.floor(i/3)%2==0,rm,sg,ch,trA,gt})}
+const tr=[{tk:1,z:1900,ln:.64,sp:4800,cl:"#f8fafc"},{tk:0,z:2400,ln:-.62,sp:7600,cl:"#1e293b"},{tk:0,z:4800,ln:-.1,sp:8800,cl:"#b91c1c"},{tk:1,z:7500,ln:.64,sp:4600,cl:"#e2e8f0"},{tk:0,z:3100,ln:-1.4,sp:-6500,cl:"#f1f5f9"},{tk:1,z:6400,ln:-1.45,sp:-5200,cl:"#ffffff"}];
+const modes=[{n:"EFFICIENCY • 200 ch",ms:9000,hp:200,ac:5400,cn:.85,c:"#4ade80"},{n:"COMFORT • 260 ch",ms:10800,hp:260,ac:6800,cn:1,c:"#60a5fa"},{n:"DYNAMIC • 326 ch",ms:12600,hp:326,ac:8500,cn:1.15,c:"#ef4444"}];
 const k={};
-onkeydown=e=>{let v=e.key.toLowerCase();k[v]=1;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(v))e.preventDefault();if(v=='v')bat=10;if(v=='n')ngt=1-ngt;if(v=='h'||v=='k')horn();if(v=='r')dst=0;if(v=='m'){mi=(mi+1)%3;let m=modes[mi],el=document.getElementById('md');el.innerText=m.n;el.style.color=m.c;document.getElementById('mp').innerText=m.hp}};
+onkeydown=e=>{let v=e.key.toLowerCase();k[v]=1;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(v))e.preventDefault();if(v=='v')bat=10;if(v=='n')ngt=1-ngt;if(v=='h'||v=='k')horn();if(v=='r')dst=0;if(v=='m'){mi=(mi+1)%3;let m=modes[mi],el=document.getElementById('md');el.innerText=m.n;el.style.color=m.c;document.getElementById('batBox').style.borderLeftColor=m.c}};
 onkeyup=e=>{let v=e.key.toLowerCase();k[v]=0;if(v=='h'||v=='k')hn=0};
 function drawGantry(x1,y1,w1,sc1,tp){
   const gs=sc1*22e4;if(gs<8||gs>900)return;
-  const h=gs*2.15;
-  const pg=x.createLinearGradient(0,y1-h,0,y1);pg.addColorStop(0,"#e2e8f0");pg.addColorStop(1,"#64748b");
+  const h=gs*2.1;
+  const pg=x.createLinearGradient(0,y1-h,0,y1);pg.addColorStop(0,"#cbd5e1");pg.addColorStop(1,"#475569");
   x.fillStyle=pg;x.fillRect(x1-w1*1.02,y1-h,gs*.09,h);x.fillRect(x1+w1*.98,y1-h,gs*.09,h);
   x.fillStyle="#94a3b8";x.fillRect(x1-w1*1.02,y1-h*.86,w1*2.04,gs*.06);x.fillRect(x1-w1*1.02,y1-h*.66,w1*2.04,gs*.06);
-  const bw=w1*.82,bh=gs*.54,bx=x1-w1*.18,by=y1-h*.98;
+  const bw=w1*.86,bh=gs*.52,bx=x1-w1*.16,by=y1-h*.98;
   x.fillStyle="#dc2626";x.fillRect(bx-gs*.18,by-gs*.13,gs*.36,gs*.13);
   x.fillStyle="#1d4ed8";x.fillRect(bx-bw*.5,by,bw,bh);x.strokeStyle="#fff";x.lineWidth=2.5;x.strokeRect(bx-bw*.5,by,bw,bh);
-  const rw=w1*.76,rx=x1+w1*.6;
-  x.fillStyle="#1d4ed8";x.fillRect(rx-rw*.5,by-gs*.08,rw,gs*.2);x.strokeRect(rx-rw*.5,by-gs*.08,rw,gs*.2);
-  x.fillStyle="#15803d";x.fillRect(rx-rw*.5,by+gs*.14,rw,gs*.16);x.strokeRect(rx-rw*.5,by+gs*.14,rw,gs*.16);
-  x.fillStyle="#f8fafc";x.fillRect(rx-rw*.5,by+gs*.32,rw,gs*.32);x.strokeStyle="#0f172a";x.strokeRect(rx-rw*.5,by+gs*.32,rw,gs*.32);
+  const rw=w1*.64,rx=x1+w1*.64;
+  x.fillStyle="#dc2626";x.fillRect(rx-gs*.18,by-gs*.05,gs*.36,gs*.12);
+  x.fillStyle="#1d4ed8";x.fillRect(rx-rw*.5,by+gs*.07,rw,gs*.44);x.strokeRect(rx-rw*.5,by+gs*.07,rw,gs*.44);
   if(gs>24){
-    const lb=tp==1?["A 1","PARIS","LILLE","BRUXELLES","A 6 • LYON","MARSEILLE"]:["A 7","LYON","MARSEILLE","NICE","A 10 • BORDEAUX","NANTES"];
-    x.fillStyle="#fff";x.textAlign="center";x.font="bold "+Math.round(gs*.08)+"px Arial";x.fillText(lb[0],bx,by-gs*.035);
-    x.font="bold "+Math.round(gs*.095)+"px Arial";x.fillText(lb[1],bx,by+bh*.35);x.fillText(lb[2],bx,by+bh*.64);x.fillText(lb[3],bx,by+bh*.92);
-    x.fillText(lb[4],rx,by+gs*.06);x.fillText(lb[5]+" ↗",rx,by+gs*.26);
-    x.fillStyle="#0f172a";x.font="bold "+Math.round(gs*.07)+"px Arial";x.fillText("TOTALENERGIES",rx,by+gs*.46);x.fillText("AIRE DE REPOS",rx,by+gs*.58);
+    const lb=tp==1?["A 1","Lille","Paris","A 25","Arras","Lens"]:["A 6","Lyon","Marseille","A 10","Bordeaux","Nantes"];
+    x.fillStyle="#fff";x.textAlign="center";x.font="bold "+Math.round(gs*.08)+"px Arial";x.fillText(lb[0],bx,by-gs*.035);x.fillText(lb[3],rx,by+gs*.04);
+    x.font="bold "+Math.round(gs*.11)+"px Arial";x.fillText(lb[1],bx,by+bh*.4);x.fillText(lb[2],bx,by+bh*.72);
+    x.fillText("⬇     ⬇     ⬇",bx,by+bh*.94);
+    x.fillText(lb[4],rx,by+gs*.24);x.fillText(lb[5],rx,by+gs*.38);x.fillText("↗",rx+rw*.26,by+gs*.47);
   }
 }
 function drawStation(x1,y1,w1,sc1){
@@ -61,7 +72,7 @@ function drawStation(x1,y1,w1,sc1){
   if(cs>28){x.fillStyle="#0f172a";x.font="bold "+Math.round(cs*.1)+"px Arial";x.textAlign="center";x.fillText("TotalEnergies • 300 kW",cx,y1-cs*1.01)}
 }
 function drawAudi(st,brk,rev,chg){
-  x.save();x.translate(W/2+st*55,H-18);x.rotate(st*.045);
+  x.save();x.translate(W/2+st*55,H-16);x.rotate(st*.045);
   if(ngt||hn){const bm=x.createLinearGradient(0,-170,0,-430);bm.addColorStop(0,hn?"rgba(255,255,255,.72)":"rgba(224,242,254,.45)");bm.addColorStop(1,"rgba(224,242,254,0)");x.fillStyle=bm;x.beginPath();x.moveTo(-105,-170);x.lineTo(-270,-430);x.lineTo(270,-430);x.lineTo(105,-170);x.fill()}
   x.fillStyle="rgba(0,0,0,.88)";x.beginPath();x.ellipse(0,10,180,28,0,0,Math.PI*2);x.fill();
   [-148,108].forEach(wx=>{x.fillStyle="#09090b";x.fillRect(wx,-62,40,68);for(let t=wx+6;t<wx+36;t+=6){x.fillStyle="#18181b";x.fillRect(t,-60,3,64)}});
@@ -88,11 +99,11 @@ function drawAudi(st,brk,rev,chg){
   x.restore();
 }
 function drawTree(tx,y1,ts){
-  if(ts<6||ts>550)return;
-  x.fillStyle="#451a03";x.fillRect(tx-ts*.06,y1-ts*.45,ts*.12,ts*.45);
-  const fg=x.createRadialGradient(tx-ts*.1,y1-ts*.75,ts*.05,tx,y1-ts*.65,ts*.42);
+  if(ts<6||ts>650)return;
+  x.fillStyle="#451a03";x.fillRect(tx-ts*.06,y1-ts*.5,ts*.12,ts*.5);
+  const fg=x.createRadialGradient(tx-ts*.1,y1-ts*.85,ts*.05,tx,y1-ts*.75,ts*.46);
   fg.addColorStop(0,ngt?"#065f46":"#4d7c0f");fg.addColorStop(.6,ngt?"#064e3b":"#365314");fg.addColorStop(1,ngt?"#022c22":"#1a2e05");
-  x.fillStyle=fg;x.beginPath();x.arc(tx,y1-ts*.68,ts*.38,0,Math.PI*2);x.arc(tx-ts*.22,y1-ts*.56,ts*.26,0,Math.PI*2);x.arc(tx+ts*.22,y1-ts*.56,ts*.26,0,Math.PI*2);x.fill();
+  x.fillStyle=fg;x.beginPath();x.arc(tx,y1-ts*.78,ts*.42,0,Math.PI*2);x.arc(tx-ts*.24,y1-ts*.64,ts*.28,0,Math.PI*2);x.arc(tx+ts*.24,y1-ts*.64,ts*.28,0,Math.PI*2);x.fill();
 }
 function drawTraffic(v,p){
   const vx=p.x1+v.ln*p.w1,w=p.sc1*(v.tk?2150:1550),h=p.sc1*(v.tk?3150:1150);
@@ -122,10 +133,12 @@ function loop(now){
   tr.forEach(v=>{v.z+=(v.sp-spd)*dt;if(v.z<280)v.z=19000;if(v.z>20000)v.z=400});
   let chg=0;for(let o=-18;o<=18;o++)if(segs[(idx+o+N)%N].ch&&px>1.02&&Math.abs(spd)<4800)chg=1;
   const cb=document.getElementById('cb');
-  if(chg){bat=Math.min(100,bat+(bat>80?2.2:4.5)*dt);cb.style.display="block";cb.innerText="⚡ RECHARGE ULTRA-RAPIDE TOTALENERGIES : "+Math.ceil(bat)+"%"}
+  if(chg){bat=Math.min(100,bat+(bat>80?2.2:4.5)*dt);cb.style.display="block";cb.innerText="⚡ RECHARGE TOTALENERGIES : "+Math.ceil(bat)+"%"}
   else{cb.style.display="none";if(acc&&bat>0)bat=Math.max(0,bat-(stepKm/4.5)*m.cn);else if(spd>200)bat=Math.min(100,bat+(stepKm/4.5)*(rev?.4:.15))}
-  const g=document.getElementById('g');g.innerText=spd<-10?"R":"D";g.style.background=spd<-10?"#f59e0b":"#bb0a30";
-  document.getElementById('s').innerText=Math.abs(Math.round(spd/60));document.getElementById('p').innerText=hp;document.getElementById('b').innerText=Math.ceil(bat)+"% ("+Math.round(bat*4.5)+" km)";document.getElementById('o').innerText=dst.toFixed(1);
+  const g=document.getElementById('g');g.innerText=spd<-10?"R":"D";g.style.background=spd<-10?"#f59e0b":"#dc2626";
+  document.getElementById('s').innerText=Math.abs(Math.round(spd/60));document.getElementById('p').innerText=hp;
+  const bPct=Math.ceil(bat);document.getElementById('b').innerText=bPct+"%";document.getElementById('rng').innerText=Math.round(bat*4.5);document.getElementById('o').innerText=dst.toFixed(1);
+  const bBar=document.getElementById('bBar');bBar.style.width=bPct+"%";bBar.style.background=bPct<20?"#ef4444":(bPct<50?"#f59e0b":"#4ade80");
   const sky=x.createLinearGradient(0,0,0,H*.5);if(ngt){sky.addColorStop(0,"#020617");sky.addColorStop(1,"#0f172a")}else{sky.addColorStop(0,"#0369a1");sky.addColorStop(.55,"#38bdf8");sky.addColorStop(.88,"#bae6fd");sky.addColorStop(1,"#f8fafc")}
   x.fillStyle=sky;x.fillRect(0,0,W,H*.5);if(ngt){x.fillStyle="#fff";for(let i=0;i<30;i++)x.fillRect((i*197)%W,(i*83)%(H*.42),2,2)}else{[[.18,.18,95],[.52,.13,125],[.8,.21,90],[.34,.26,75]].forEach(cl=>{const cg=x.createRadialGradient(W*cl[0],H*cl[1],10,W*cl[0],H*cl[1],cl[2]);cg.addColorStop(0,"rgba(255,255,255,.92)");cg.addColorStop(.65,"rgba(241,245,249,.55)");cg.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=cg;x.beginPath();x.arc(W*cl[0],H*cl[1],cl[2],0,Math.PI*2);x.fill()})}
   const hg=x.createLinearGradient(0,H*.43,0,H*.5);hg.addColorStop(0,ngt?"#090d16":"#475569");hg.addColorStop(1,ngt?"#020617":"#365314");
@@ -138,7 +151,7 @@ function loop(now){
     pts.push({n,s,sn,x1,y1,w1,x2,y2,w2,sc1});rx+=dx;dx+=s.cv;
   }
   for(let i=pts.length-1;i>=0;i--){
-    const {n,s,sn,x1,y1,w1,x2,y2,w2,sc1}=pts[i];
+    const {s,sn,x1,y1,w1,x2,y2,w2,sc1}=pts[i];
     if(y1>y2){
       x.fillStyle=ngt?(s.dk?"#142608":"#0f1d06"):(s.dk?"#4d7c0f":"#365314");x.fillRect(0,y2,W,y1-y2);
       const rg=x.createLinearGradient(x1-w1*1.8,y1,x1+w1,y1);
@@ -151,11 +164,11 @@ function loop(now){
       if(s.rm>0||sn.rm>0){x.fillStyle=s.dk?"#facc15":"#fff";x.beginPath();x.moveTo(x1+w1,y1);x.lineTo(x1+w1*(1+s.rm*.22),y1);x.lineTo(x2+w2*(1+sn.rm*.22),y2);x.lineTo(x2+w2,y2);x.fill();x.fillStyle="#334155";x.beginPath();x.moveTo(x1+w1*(1+s.rm*.22),y1);x.lineTo(x1+w1*(1+s.rm*1.35),y1);x.lineTo(x2+w2*(1+sn.rm*1.35),y2);x.lineTo(x2+w2*(1+sn.rm*.22),y2);x.fill()}
     }
     if(s.gt)drawGantry(x1,y1,w1,sc1,s.gt);
-    if(s.sg){const ss=sc1*22e4;if(ss>6&&ss<650){const sx=x1+w1*1.18;x.fillStyle="#cbd5e1";x.fillRect(sx-ss*.04,y1-ss,ss*.08,ss);x.fillStyle="#fff";x.beginPath();x.arc(sx,y1-ss*1.15,ss*.24,0,Math.PI*2);x.fill();x.strokeStyle="#dc2626";x.lineWidth=ss*.05;x.stroke();if(ss>18){x.fillStyle="#0f172a";x.font="bold "+Math.round(ss*.2)+"px Arial";x.textAlign="center";x.fillText("90",sx,y1-ss*1.08)}}}
-    if(s.trA){drawTree(x1-w1*2.45,y1,sc1*16e4);drawTree(x1+w1*2.85,y1,sc1*16e4)}
+    if(s.sg){const ss=sc1*22e4;if(ss>6&&ss<650){const sx=x1+w1*1.18;x.fillStyle="#cbd5e1";x.fillRect(sx-ss*.04,y1-ss,ss*.08,ss);x.fillStyle="#1d4ed8";x.fillRect(sx-ss*.3,y1-ss*1.35,ss*.6,ss*.5);x.strokeStyle="#fff";x.lineWidth=2.5;x.strokeRect(sx-ss*.3,y1-ss*1.35,ss*.6,ss*.5);if(ss>20){x.fillStyle="#fff";x.font="bold "+Math.round(ss*.14)+"px Arial";x.textAlign="center";x.fillText("↗",sx,y1-ss*1.12);x.fillText("300 m",sx,y1-ss*.94)}}}
+    if(s.trA){drawTree(x1-w1*2.45,y1,sc1*18e4);drawTree(x1+w1*2.85,y1,sc1*18e4)}
     if(s.ch)drawStation(x1,y1,w1,sc1);
-    tr.forEach(v=>{const vi=Math.min(114,Math.max(0,Math.floor((v.z+(pos%L))/L)));if(vi===n)drawTraffic(v,pts[n])});
   }
+  tr.slice().sort((a,b)=>b.z-a.z).forEach(v=>{const ni=Math.min(114,Math.max(0,Math.floor(v.z/L)));if(pts[ni])drawTraffic(v,pts[ni])});
   drawAudi(st,brk,rev,chg);requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
