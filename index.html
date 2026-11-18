@@ -88,7 +88,7 @@
 </head>
 <body>
 <div id="scene">
-  <img id="bg" src="image.png" onerror="const t=['image.jpg','image.jpeg','Image.png','Image.jpg','Image.jpeg','image.webp','image'];let i=t.indexOf(this.getAttribute('src'));if(i<t.length-1)this.src=t[i+1];else this.onerror=null;" alt="Audi A2 e-tron">
+  <img id="bg" alt="Audi A2 e-tron">
   <div id="alert">⚠️ BATTERIE FAIBLE • RECHARGE CONSEILLÉE</div>
   <div id="u">
     <b style="color:#60a5fa">AUDI A2 e-tron • AUTOROUTE A1 / A25</b><br>
@@ -113,6 +113,26 @@
 
 <script>
 const bg = document.getElementById('bg');
+
+const base = 'https://githubusercontent.com';
+const candidates = [
+  'image.png', 'image.jpg', 'image.jpeg', 'image',
+  'Image.png', 'Image.jpg', 'Image.jpeg', 'Image',
+  'decor.png', 'decor.jpg', 'd%C3%A9cor.png', 'd%C3%A9cor.jpg',
+  base + 'image.png', base + 'image.jpg', base + 'image.jpeg', base + 'image',
+  base + 'Image.png', base + 'Image.jpg', base + 'decor.png', base + 'd%C3%A9cor.png'
+];
+let imgIdx = 0;
+bg.onerror = () => {
+  imgIdx++;
+  if (imgIdx < candidates.length) {
+    bg.src = candidates[imgIdx];
+  } else {
+    bg.onerror = null;
+  }
+};
+bg.src = candidates[0];
+
 const modes = [
   { n: "EFFICIENCY • 200 ch", max: 150, hp: 200, acc: 28, c: "#4ade80" },
   { n: "COMFORT • 260 ch", max: 180, hp: 260, acc: 38, c: "#60a5fa" },
