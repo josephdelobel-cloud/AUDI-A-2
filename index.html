@@ -88,7 +88,7 @@
 </head>
 <body>
 <div id="scene">
-  <img id="bg" alt="Audi A2 e-tron">
+  <img id="bg" src="image.png" alt="Audi A2 e-tron">
   <div id="alert">⚠️ BATTERIE FAIBLE • RECHARGE CONSEILLÉE</div>
   <div id="u">
     <b style="color:#60a5fa">AUDI A2 e-tron • AUTOROUTE A1 / A25</b><br>
@@ -101,7 +101,7 @@
     <div style="width:100%;height:7px;background:#334155;border-radius:4px;overflow:hidden;margin:6px 0">
       <div id="bBar" style="width:85%;height:100%;background:#4ade80;transition:width 0.2s"></div>
     </div>
-    <div style="font-size:14px;color:#e2e8f0">🛣️ Distance : <b id="o">14.2</b> km</div>
+    <div style="font-size:14px;color:#e2e8f0">🛣️ Distance : <b id="o">0.0</b> km</div>
   </div>
   <div id="gtDial">
     <div id="g" style="background:#dc2626;padding:2px 10px;border-radius:6px;font-weight:bold;font-size:15px;margin-bottom:2px">D</div>
@@ -113,28 +113,13 @@
 
 <script>
 const bg = document.getElementById('bg');
-
-async function loadRepoImage() {
-  try {
-    const res = await fetch('https://github.com');
-    const files = await res.json();
-    const imgFile = files.find(f => f.type === 'file' && f.name !== 'index.html' && !f.name.startsWith('.'));
-    if (imgFile) {
-      bg.src = imgFile.download_url;
-      return;
-    }
-  } catch (e) {}
-  bg.src = 'image.png';
-}
-loadRepoImage();
-
 const modes = [
   { n: "EFFICIENCY • 200 ch", max: 150, hp: 200, acc: 28, c: "#4ade80" },
   { n: "COMFORT • 260 ch", max: 180, hp: 260, acc: 38, c: "#60a5fa" },
   { n: "DYNAMIC • 326 ch", max: 210, hp: 326, acc: 52, c: "#ef4444" }
 ];
 
-let mi = 2, spd = 0, bat = 85, dst = 14.2, tilt = 0, ngt = false, last = performance.now();
+let mi = 2, spd = 0, bat = 85, dst = 0.0, tilt = 0, ngt = false, last = performance.now();
 const k = {};
 
 window.addEventListener('keydown', e => {
