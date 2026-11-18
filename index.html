@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Audi A2 e-tron - Simulateur TotalEnergies</title>
+    <title>Audi A2 e-tron (326 ch) - Simulateur TotalEnergies</title>
     <style>
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #8bb4d9; font-family: 'Segoe UI', Arial, sans-serif; }
@@ -11,9 +11,10 @@
         #ui {
             position: absolute; top: 15px; left: 15px; color: white;
             background: rgba(12, 16, 24, 0.88); padding: 15px 20px; border-radius: 12px;
-            border-left: 4px solid #16389c; box-shadow: 0 8px 25px rgba(0,0,0,0.5); z-index: 10;
+            border-left: 4px solid #bb0a30; box-shadow: 0 8px 25px rgba(0,0,0,0.5); z-index: 10;
         }
-        h1 { margin: 0 0 6px 0; font-size: 18px; letter-spacing: 1px; }
+        h1 { margin: 0 0 4px 0; font-size: 18px; letter-spacing: 1px; }
+        .badge-hp { display: inline-block; background: #bb0a30; color: white; font-size: 11px; font-weight: bold; padding: 2px 7px; border-radius: 4px; margin-bottom: 8px; }
         p { margin: 4px 0; font-size: 13px; color: #ccc; }
         .btn-upload {
             display: inline-block; margin-top: 10px; padding: 7px 12px;
@@ -46,14 +47,20 @@
 
         #hud {
             position: absolute; bottom: 20px; right: 20px; color: white;
-            background: rgba(12, 16, 24, 0.9); padding: 16px 24px; border-radius: 14px;
-            border-bottom: 4px solid #16389c; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-            z-index: 10; min-width: 230px;
+            background: rgba(12, 16, 24, 0.92); padding: 16px 24px; border-radius: 14px;
+            border-bottom: 4px solid #bb0a30; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            z-index: 10; min-width: 250px;
         }
         .hud-row { display: flex; justify-content: space-between; align-items: baseline; }
-        #speed { font-size: 36px; font-weight: bold; font-variant-numeric: tabular-nums; }
+        #speed { font-size: 38px; font-weight: bold; font-variant-numeric: tabular-nums; }
         .unit { font-size: 14px; color: #5c85ff; }
         
+        .power-meter { margin-top: 8px; }
+        .power-header { display: flex; justify-content: space-between; font-size: 12px; color: #cbd5e1; margin-bottom: 4px; font-weight: bold; }
+        #hp-val { color: #f87171; }
+        .hp-bar-bg { width: 100%; height: 6px; background: #262b36; border-radius: 3px; overflow: hidden; }
+        #hp-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #3b82f6, #ef4444); }
+
         .battery-box { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.15); }
         .bat-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; font-weight: bold; }
         #range-km { color: #4ade80; font-size: 15px; }
@@ -73,6 +80,7 @@
 
     <div id="ui">
         <h1>AUDI A2 e-tron</h1>
+        <div class="badge-hp">quattro • 326 ch (240 kW)</div>
         <p><strong>Flèches</strong> ou <strong>Z Q S D</strong> : Piloter</p>
         <p><strong>Espace</strong> : Freinage régénératif</p>
         <p><strong>Stations TotalEnergies</strong> : Ralentissez à droite</p>
@@ -92,11 +100,11 @@
             </select>
         </div>
         <div class="setting-item">
-            <label>Audi Drive Select</label>
+            <label>Audi Drive Select (326 ch)</label>
             <select id="drive-mode">
-                <option value="efficiency">Efficiency (Autonomie max)</option>
-                <option value="comfort" selected>Comfort (Équilibré)</option>
-                <option value="dynamic">Dynamic (Vitesse max 180 km/h)</option>
+                <option value="efficiency">Efficiency (Bridage 150 km/h • 200 ch)</option>
+                <option value="comfort">Comfort (180 km/h • 260 ch)</option>
+                <option value="dynamic" selected>Dynamic (V-Max 210 km/h • 326 ch)</option>
             </select>
         </div>
         <div class="setting-item">
@@ -112,6 +120,17 @@
             <span style="font-size:12px; color:#94a3b8;">VITESSE</span>
             <div id="speed">0 <span class="unit">km/h</span></div>
         </div>
+        
+        <div class="power-meter">
+            <div class="power-header">
+                <span>PUISSANCE MOTEUR</span>
+                <span id="hp-val">0 ch / 326 ch</span>
+            </div>
+            <div class="hp-bar-bg">
+                <div id="hp-bar-fill"></div>
+            </div>
+        </div>
+
         <div class="battery-box">
             <div class="bat-header">
                 <span id="bat-pct">🔋 100 %</span>
@@ -120,7 +139,7 @@
             <div class="bar-bg">
                 <div id="bar-fill"></div>
             </div>
-            <div id="power-status">READY • e-tron</div>
+            <div id="power-status">READY • e-tron quattro</div>
         </div>
     </div>
 
@@ -161,12 +180,28 @@
             resize();
         });
 
-        let baseMaxSpeed = 11000;
-        let consumptionFactor = 1.0;
+        let baseMaxSpeed = 12600;
+        let maxHorsepower = 326;
+        let accelPower = 8200;
+        let consumptionFactor = 1.25;
+
         document.getElementById('drive-mode').addEventListener('change', (e) => {
-            if (e.target.value === 'efficiency') { baseMaxSpeed = 8500; consumptionFactor = 0.65; }
-            else if (e.target.value === 'comfort') { baseMaxSpeed = 11000; consumptionFactor = 1.0; }
-            else { baseMaxSpeed = 13500; consumptionFactor = 1.5; }
+            if (e.target.value === 'efficiency') {
+                baseMaxSpeed = 9000;
+                maxHorsepower = 200;
+                accelPower = 5200;
+                consumptionFactor = 0.7;
+            } else if (e.target.value === 'comfort') {
+                baseMaxSpeed = 10800;
+                maxHorsepower = 260;
+                accelPower = 6600;
+                consumptionFactor = 0.95;
+            } else {
+                baseMaxSpeed = 12600;
+                maxHorsepower = 326;
+                accelPower = 8200;
+                consumptionFactor = 1.25;
+            }
         });
 
         document.getElementById('btn-recharge').addEventListener('click', () => {
@@ -191,39 +226,3 @@
             reader.onload = function(event) {
                 const img = new Image();
                 img.onload = function() { customCarImg = img; };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-
-        const segmentLength = 200;
-        const rumbleLength = 3;
-        const roadWidth = 2000;
-        const cameraHeight = 1000;
-        const cameraDepth = 0.84;
-        const segments = [];
-
-        for (let n = 0; n < 1500; n++) {
-            let curve = 0;
-            if (n > 100 && n < 250) curve = 2.2;
-            if (n > 350 && n < 550) curve = -2.8;
-            if (n > 650 && n < 800) curve = 1.6;
-            if (n > 950 && n < 1200) curve = -2.2;
-
-            let hill = Math.sin(n / 50) * 300;
-            let nextHill = Math.sin((n + 1) / 50) * 300;
-
-            segments.push({
-                index: n,
-                p1: { world: { x: 0, y: hill, z: n * segmentLength }, camera: {}, screen: {} },
-                p2: { world: { x: 0, y: nextHill, z: (n + 1) * segmentLength }, camera: {}, screen: {} },
-                curve: curve,
-                color: Math.floor(n / rumbleLength) % 2 ? 
-                    { road: '#2b2d31', grass: '#b5aa94', rumble: '#16389c', lane: '#ffffff' } : 
-                    { road: '#25272b', grass: '#aba08a', rumble: '#ffffff', lane: '' },
-                tree: (n % 14 === 0) ? (n % 28 === 0 ? -1 : 1) : 0,
-                charger: (n > 35 && n % 150 === 0)
-            });
-        }
-
-        const trackLength = segments.length * segmentLength;
