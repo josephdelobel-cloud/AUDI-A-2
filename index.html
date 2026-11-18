@@ -2,34 +2,30 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Audi A2 e-tron - Configurateur Jouable</title>
+    <title>Audi A2 e-tron - Jeu 3D</title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #111; }
+        body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; background: #87ceeb; }
         #ui {
-            position: absolute; top: 20px; left: 20px; color: white;
-            background: rgba(15, 20, 30, 0.8); padding: 15px 20px; border-radius: 12px;
-            border-left: 4px solid #16389c; backdrop-filter: blur(6px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            position: absolute; top: 15px; left: 15px; color: white;
+            background: rgba(15, 20, 30, 0.85); padding: 15px; border-radius: 10px;
+            border-left: 4px solid #16389c; z-index: 10;
         }
-        h1 { margin: 0 0 8px 0; font-size: 20px; letter-spacing: 1px; }
+        h1 { margin: 0 0 8px 0; font-size: 18px; }
         p { margin: 4px 0; font-size: 13px; color: #ddd; }
-        .controls { margin-top: 12px; display: flex; align-items: center; gap: 10px; font-size: 13px; }
-        input[type="color"] { border: none; width: 32px; height: 32px; cursor: pointer; background: none; }
+        .controls { margin-top: 10px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
         #speedometer {
-            position: absolute; bottom: 20px; right: 20px; color: white;
-            background: rgba(15, 20, 30, 0.8); padding: 15px 25px; border-radius: 12px;
-            font-size: 28px; font-weight: bold; font-variant-numeric: tabular-nums;
-            border-bottom: 4px solid #16389c; backdrop-filter: blur(6px);
+            position: absolute; bottom: 15px; right: 15px; color: white;
+            background: rgba(15, 20, 30, 0.85); padding: 12px 20px; border-radius: 10px;
+            font-size: 26px; font-weight: bold; border-bottom: 4px solid #16389c; z-index: 10;
         }
         span.unit { font-size: 14px; color: #5c85ff; }
     </style>
-    <script src="https://cloudflare.com"></script>
 </head>
 <body>
     <div id="ui">
         <h1>AUDI A2 e-tron</h1>
         <p><strong>Flèches</strong> ou <strong>Z Q S D</strong> : Conduire</p>
-        <p><strong>Espace</strong> : Freiner | <strong>C</strong> : Changer caméra</p>
+        <p><strong>C</strong> : Changer caméra | <strong>Espace</strong> : Frein</p>
         <div class="controls">
             <label for="carColor">Peinture :</label>
             <input type="color" id="carColor" value="#16389c">
@@ -37,193 +33,197 @@
     </div>
     <div id="speedometer">0 <span class="unit">km/h</span></div>
 
+    <script src="https://unpkg.com"></script>
     <script>
-        // 1. Scène et Lumières
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xdce6f2);
-        scene.fog = new THREE.Fog(0xdce6f2, 50, 250);
+        window.onload = function() {
+            if (typeof THREE === 'undefined') {
+                document.body.innerHTML = "<h2 style='color:black;padding:20px;'>Erreur de chargement 3D. Vérifiez votre connexion internet et actualisez la page.</h2>";
+                return;
+            }
 
-        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        document.body.appendChild(renderer.domElement);
+            // 1. Scène et Caméra
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xdce6f2);
+            scene.fog = new THREE.Fog(0xdce6f2, 50, 220);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
-        scene.add(ambientLight);
+            const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "default" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
 
-        const dirLight = new THREE.DirectionalLight(0xfff5e6, 1.1);
-        dirLight.position.set(40, 80, 60);
-        dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 2048;
-        dirLight.shadow.mapSize.height = 2048;
-        dirLight.shadow.camera.top = 120;
-        dirLight.shadow.camera.bottom = -120;
-        dirLight.shadow.camera.left = -120;
-        dirLight.shadow.camera.right = 120;
-        scene.add(dirLight);
+            // 2. Lumières simples et rapides pour Chromebook
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
 
-        // 2. Décor inspiré de la photo (Route côtière & montagne)
-        const ground = new THREE.Mesh(
-            new THREE.PlaneGeometry(2500, 2500),
-            new THREE.MeshStandardMaterial({ color: 0xc2b8a3, roughness: 0.9 })
-        );
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(30, 60, 40);
+            scene.add(dirLight);
 
-        // Lac / Mer sur le côté droit comme sur la photo
-        const water = new THREE.Mesh(
-            new THREE.PlaneGeometry(1000, 2500),
-            new THREE.MeshStandardMaterial({ color: 0x4a7c9b, metalness: 0.6, roughness: 0.2 })
-        );
-        water.rotation.x = -Math.PI / 2;
-        water.position.set(520, 0.01, 0);
-        scene.add(water);
-
-        // Route asphaltée
-        const road = new THREE.Mesh(
-            new THREE.PlaneGeometry(16, 2500),
-            new THREE.MeshStandardMaterial({ color: 0x26282c, roughness: 0.7 })
-        );
-        road.rotation.x = -Math.PI / 2;
-        road.position.y = 0.02;
-        road.receiveShadow = true;
-        scene.add(road);
-
-        for (let i = -1200; i < 1200; i += 16) {
-            const line = new THREE.Mesh(
-                new THREE.PlaneGeometry(0.25, 6),
-                new THREE.MeshBasicMaterial({ color: 0xffffff })
+            // 3. Décor (Sol, Mer et Route)
+            const ground = new THREE.Mesh(
+                new THREE.PlaneGeometry(2500, 2500),
+                new THREE.MeshLambertMaterial({ color: 0xc2b8a3 })
             );
-            line.rotation.x = -Math.PI / 2;
-            line.position.set(0, 0.03, i);
-            scene.add(line);
-        }
+            ground.rotation.x = -Math.PI / 2;
+            scene.add(ground);
 
-        // 3. Modélisation fidèle de l'Audi A2 e-tron (Bleu configuration)
-        const carGroup = new THREE.Group();
-        const bluePaint = new THREE.MeshStandardMaterial({ color: 0x16389c, metalness: 0.75, roughness: 0.22 });
-        const blackTrim = new THREE.MeshStandardMaterial({ color: 0x141414, metalness: 0.4, roughness: 0.4 });
-        const glassMat = new THREE.MeshStandardMaterial({ color: 0x11151c, metalness: 0.9, roughness: 0.1 });
-        const chromeMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.95, roughness: 0.1 });
+            const water = new THREE.Mesh(
+                new THREE.PlaneGeometry(1000, 2500),
+                new THREE.MeshLambertMaterial({ color: 0x4a7c9b })
+            );
+            water.rotation.x = -Math.PI / 2;
+            water.position.set(520, 0.02, 0);
+            scene.add(water);
 
-        // Bas de caisse noir (Pack noir)
-        const skirt = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.14, 4.15), blackTrim);
-        skirt.position.y = 0.26;
-        carGroup.add(skirt);
+            const road = new THREE.Mesh(
+                new THREE.PlaneGeometry(16, 2500),
+                new THREE.MeshLambertMaterial({ color: 0x26282c })
+            );
+            road.rotation.x = -Math.PI / 2;
+            road.position.y = 0.04;
+            scene.add(road);
 
-        // Carrosserie principale
-        const mainBody = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.58, 4.12), bluePaint);
-        mainBody.position.y = 0.62;
-        mainBody.castShadow = true;
-        carGroup.add(mainBody);
-
-        // Capot profilé légèrement incliné
-        const hood = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.12, 1.15), bluePaint);
-        hood.position.set(0, 0.92, 1.42);
-        hood.rotation.x = 0.08;
-        carGroup.add(hood);
-
-        // Habitacle (vitrage teinté)
-        const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.66, 0.54, 2.35), glassMat);
-        cabin.position.set(0, 1.16, -0.25);
-        cabin.castShadow = true;
-        carGroup.add(cabin);
-
-        // Toit bleu et montants
-        const roof = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.07, 2.05), bluePaint);
-        roof.position.set(0, 1.44, -0.3);
-        carGroup.add(roof);
-
-        // Rétroviseurs noirs brillants (comme sur votre photo)
-        [-0.98, 0.98].forEach(x => {
-            const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.11, 0.24), blackTrim);
-            mirror.position.set(x, 0.98, 0.65);
-            carGroup.add(mirror);
-        });
-
-        // Grande calandre Singleframe noire
-        const grille = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.42, 0.05), blackTrim);
-        grille.position.set(0, 0.58, 2.05);
-        carGroup.add(grille);
-
-        // Plaque d'immatriculation "A2 e-tron"
-        const plateCanvas = document.createElement('canvas');
-        plateCanvas.width = 256; plateCanvas.height = 64;
-        const pCtx = plateCanvas.getContext('2d');
-        pCtx.fillStyle = '#ffffff'; pCtx.fillRect(0, 0, 256, 64);
-        pCtx.fillStyle = '#111111'; pCtx.font = 'bold 34px Arial'; pCtx.textAlign = 'center';
-        pCtx.fillText('A2 e-tron', 128, 44);
-        const plateTex = new THREE.CanvasTexture(plateCanvas);
-        const plate = new THREE.Mesh(
-            new THREE.PlaneGeometry(0.55, 0.13),
-            new THREE.MeshBasicMaterial({ map: plateTex })
-        );
-        plate.position.set(0, 0.5, 2.08);
-        carGroup.add(plate);
-
-        // Les 4 anneaux Audi en haut de la calandre
-        [-0.135, -0.045, 0.045, 0.135].forEach(xOffset => {
-            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.01, 8, 24), chromeMat);
-            ring.position.set(xOffset, 0.77, 2.075);
-            carGroup.add(ring);
-        });
-
-        // Phares LED segmentés (petits traits blancs caractéristiques de l'A2 e-tron)
-        const ledMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        [-1, 1].forEach(side => {
-            for (let s = 0; s < 5; s++) {
-                const segment = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.035, 0.04), ledMat);
-                segment.position.set(side * (0.48 + s * 0.09), 0.85, 2.05 - s * 0.015);
-                carGroup.add(segment);
-            }
-        });
-
-        // Bandeau LED arrière rouge
-        const tailLight = new THREE.Mesh(
-            new THREE.BoxGeometry(1.78, 0.07, 0.05),
-            new THREE.MeshBasicMaterial({ color: 0xff0022 })
-        );
-        tailLight.position.set(0, 0.86, -2.06);
-        carGroup.add(tailLight);
-
-        // 4. Jantes aérodynamiques bicolores (Noir + Alu 5 branches)
-        const wheels = [];
-        const tireMat = new THREE.MeshStandardMaterial({ color: 0x181818, roughness: 0.85 });
-        const alloyMat = new THREE.MeshStandardMaterial({ color: 0xd9dde2, metalness: 0.85, roughness: 0.2 });
-
-        const wheelCoords = [
-            [-0.94, 0.39, 1.32], [0.94, 0.39, 1.32],
-            [-0.94, 0.39, -1.32], [0.94, 0.39, -1.32]
-        ];
-
-        wheelCoords.forEach(pos => {
-            const wheelUnit = new THREE.Group();
-            wheelUnit.position.set(...pos);
-
-            // Pneu
-            const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.39, 0.39, 0.24, 28), tireMat);
-            tire.rotation.z = Math.PI / 2;
-            tire.castShadow = true;
-            wheelUnit.add(tire);
-
-            // Fond de jante noir
-            const rimBase = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.29, 0.25, 24), blackTrim);
-            rimBase.rotation.z = Math.PI / 2;
-            wheelUnit.add(rimBase);
-
-            // 5 branches larges aluminium (style Aero de la photo)
-            for (let b = 0; b < 5; b++) {
-                const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.11, 0.24), alloyMat);
-                const angleSpoke = (b * Math.PI * 2) / 5;
-                spoke.position.set(0, Math.cos(angleSpoke) * 0.14, Math.sin(angleSpoke) * 0.14);
-                spoke.rotation.x = angleSpoke;
-                wheelUnit.add(spoke);
+            for (let i = -1200; i < 1200; i += 16) {
+                const line = new THREE.Mesh(
+                    new THREE.PlaneGeometry(0.25, 6),
+                    new THREE.MeshBasicMaterial({ color: 0xffffff })
+                );
+                line.rotation.x = -Math.PI / 2;
+                line.position.set(0, 0.06, i);
+                scene.add(line);
             }
 
-            carGroup.add(wheelUnit);
-            wheels.push(wheelUnit);
-        });
+            // 4. Modélisation Audi A2 e-tron (Bleu configuration)
+            const carGroup = new THREE.Group();
+            const bluePaint = new THREE.MeshPhongMaterial({ color: 0x16389c, shininess: 90 });
+            const blackTrim = new THREE.MeshLambertMaterial({ color: 0x141414 });
+            const glassMat = new THREE.MeshPhongMaterial({ color: 0x11151c, shininess: 100 });
+            const chromeMat = new THREE.MeshPhongMaterial({ color: 0xeeeeee, shininess: 100 });
 
+            // Bas de caisse noir
+            const skirt = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.14, 4.15), blackTrim);
+            skirt.position.y = 0.26;
+            carGroup.add(skirt);
+
+            // Carrosserie
+            const mainBody = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.58, 4.12), bluePaint);
+            mainBody.position.y = 0.62;
+            carGroup.add(mainBody);
+
+            // Capot
+            const hood = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.12, 1.15), bluePaint);
+            hood.position.set(0, 0.92, 1.42);
+            hood.rotation.x = 0.08;
+            carGroup.add(hood);
+
+            // Habitacle
+            const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.66, 0.54, 2.35), glassMat);
+            cabin.position.set(0, 1.16, -0.25);
+            carGroup.add(cabin);
+
+            // Toit bleu
+            const roof = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.07, 2.05), bluePaint);
+            roof.position.set(0, 1.44, -0.3);
+            carGroup.add(roof);
+
+            // Rétroviseurs noirs
+            [-0.98, 0.98].forEach(x => {
+                const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.11, 0.24), blackTrim);
+                mirror.position.set(x, 0.98, 0.65);
+                carGroup.add(mirror);
+            });
+
+            // Calandre Singleframe noire
+            const grille = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.42, 0.05), blackTrim);
+            grille.position.set(0, 0.58, 2.05);
+            carGroup.add(grille);
+
+            // Plaque "A2 e-tron"
+            const plateCanvas = document.createElement('canvas');
+            plateCanvas.width = 256; plateCanvas.height = 64;
+            const pCtx = plateCanvas.getContext('2d');
+            pCtx.fillStyle = '#ffffff'; pCtx.fillRect(0, 0, 256, 64);
+            pCtx.fillStyle = '#111111'; pCtx.font = 'bold 34px Arial'; pCtx.textAlign = 'center';
+            pCtx.fillText('A2 e-tron', 128, 44);
+            const plateTex = new THREE.CanvasTexture(plateCanvas);
+            const plate = new THREE.Mesh(
+                new THREE.PlaneGeometry(0.55, 0.13),
+                new THREE.MeshBasicMaterial({ map: plateTex })
+            );
+            plate.position.set(0, 0.5, 2.08);
+            carGroup.add(plate);
+
+            // 4 anneaux Audi
+            [-0.135, -0.045, 0.045, 0.135].forEach(xOffset => {
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.01, 8, 20), chromeMat);
+                ring.position.set(xOffset, 0.77, 2.075);
+                carGroup.add(ring);
+            });
+
+            // Phares LED segmentés
+            const ledMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            [-1, 1].forEach(side => {
+                for (let s = 0; s < 5; s++) {
+                    const segment = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.035, 0.04), ledMat);
+                    segment.position.set(side * (0.48 + s * 0.09), 0.85, 2.05 - s * 0.015);
+                    carGroup.add(segment);
+                }
+            });
+
+            // Bandeau LED arrière
+            const tailLight = new THREE.Mesh(
+                new THREE.BoxGeometry(1.78, 0.07, 0.05),
+                new THREE.MeshBasicMaterial({ color: 0xff0022 })
+            );
+            tailLight.position.set(0, 0.86, -2.06);
+            carGroup.add(tailLight);
+
+            // Jantes bicolores 5 branches
+            const wheels = [];
+            const tireMat = new THREE.MeshLambertMaterial({ color: 0x181818 });
+            const alloyMat = new THREE.MeshPhongMaterial({ color: 0xd9dde2, shininess: 80 });
+
+            const wheelCoords = [
+                [-0.94, 0.39, 1.32], [0.94, 0.39, 1.32],
+                [-0.94, 0.39, -1.32], [0.94, 0.39, -1.32]
+            ];
+
+            wheelCoords.forEach(pos => {
+                const wheelUnit = new THREE.Group();
+                wheelUnit.position.set(...pos);
+
+                const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.39, 0.39, 0.24, 24), tireMat);
+                tire.rotation.z = Math.PI / 2;
+                wheelUnit.add(tire);
+
+                const rimBase = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.29, 0.25, 20), blackTrim);
+                rimBase.rotation.z = Math.PI / 2;
+                wheelUnit.add(rimBase);
+
+                for (let b = 0; b < 5; b++) {
+                    const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.11, 0.24), alloyMat);
+                    const angleSpoke = (b * Math.PI * 2) / 5;
+                    spoke.position.set(0, Math.cos(angleSpoke) * 0.14, Math.sin(angleSpoke) * 0.14);
+                    spoke.rotation.x = angleSpoke;
+                    wheelUnit.add(spoke);
+                }
+
+                carGroup.add(wheelUnit);
+                wheels.push(wheelUnit);
+            });
+
+            scene.add(carGroup);
+
+            // Couleur dynamique
+            document.getElementById('carColor').addEventListener('input', (e) => {
+                bluePaint.color.set(e.target.value);
+            });
+
+            // 5. Contrôles
+            const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, z: false, s: false, q: false, d: false, " ": false };
+            let camMode = 0;
+
+            window.addEventListener('keydown', (e) => {
+                const k = e.key.toLowerCase();
+                if (keys.hasOwnProperty(k)) keys[k] = true;
+                if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
