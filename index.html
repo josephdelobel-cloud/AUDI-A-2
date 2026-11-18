@@ -114,24 +114,19 @@
 <script>
 const bg = document.getElementById('bg');
 
-const base = 'https://githubusercontent.com';
-const candidates = [
-  'image.png', 'image.jpg', 'image.jpeg', 'image',
-  'Image.png', 'Image.jpg', 'Image.jpeg', 'Image',
-  'decor.png', 'decor.jpg', 'd%C3%A9cor.png', 'd%C3%A9cor.jpg',
-  base + 'image.png', base + 'image.jpg', base + 'image.jpeg', base + 'image',
-  base + 'Image.png', base + 'Image.jpg', base + 'decor.png', base + 'd%C3%A9cor.png'
-];
-let imgIdx = 0;
-bg.onerror = () => {
-  imgIdx++;
-  if (imgIdx < candidates.length) {
-    bg.src = candidates[imgIdx];
-  } else {
-    bg.onerror = null;
-  }
-};
-bg.src = candidates[0];
+async function loadRepoImage() {
+  try {
+    const res = await fetch('https://github.com');
+    const files = await res.json();
+    const imgFile = files.find(f => f.type === 'file' && f.name !== 'index.html' && !f.name.startsWith('.'));
+    if (imgFile) {
+      bg.src = imgFile.download_url;
+      return;
+    }
+  } catch (e) {}
+  bg.src = 'image.png';
+}
+loadRepoImage();
 
 const modes = [
   { n: "EFFICIENCY • 200 ch", max: 150, hp: 200, acc: 28, c: "#4ade80" },
