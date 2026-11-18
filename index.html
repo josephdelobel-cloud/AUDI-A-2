@@ -2,223 +2,107 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Audi A2 e-tron Paris - Trafic Audi & Camions Mercedes</title>
+<title>Audi A2 e-tron Paris</title>
 <style>
-  body{margin:0;overflow:hidden;background:#0f172a;font-family:Arial,sans-serif}
+  body{margin:0;overflow:hidden;background:#0f172a;font-family:Arial}
   canvas{display:block;width:100vw;height:100vh}
-  #u{position:absolute;top:12px;left:12px;background:rgba(15,23,42,.92);color:#fff;padding:12px 15px;border-radius:8px;border-left:4px solid #bb0a30;font-size:13px;line-height:1.4}
-  #h{position:absolute;bottom:15px;right:15px;background:rgba(15,23,42,.94);color:#fff;padding:14px 20px;border-radius:10px;border-bottom:4px solid #bb0a30;font-size:15px;font-weight:bold;min-width:235px}
-  #chg-banner{position:absolute;top:20px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 26px;border-radius:30px;font-weight:bold;font-size:16px;display:none;box-shadow:0 4px 25px rgba(22,163,74,.9);z-index:20;border:2px solid #fff}
+  #u{position:absolute;top:10px;left:10px;background:rgba(15,23,42,.9);color:#fff;padding:10px;border-radius:8px;border-left:4px solid #bb0a30;font-size:12px}
+  #h{position:absolute;bottom:15px;right:15px;background:rgba(15,23,42,.92);color:#fff;padding:12px 18px;border-radius:10px;border-bottom:4px solid #bb0a30;font-size:15px;font-weight:bold}
+  #cb{position:absolute;top:15px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 20px;border-radius:20px;font-weight:bold;display:none}
 </style>
 </head>
 <body>
-<div id="chg-banner">⚡ RECHARGE TOTALENERGIES EN COURS...</div>
-<div id="u">
-  <b>AUDI A2 e-tron • AUTOROUTE PARIS (326 ch)</b><br>
-  <b>Flèche Haut / Z</b> : Avancer | <b>Flèche Bas / S</b> : Freiner & Marche arrière<br>
-  <b>Gauche / Droite (Q / D)</b> : Doubler les Audi & Camions Mercedes | <b>V</b> : Batterie 10%<br>
-  <b>Bretelle TotalEnergies</b> : Prenez la sortie à droite et ralentissez (&lt; 80 km/h)
-</div>
-<div id="h">
-  <span id="g" style="background:#bb0a30;padding:2px 7px;border-radius:4px;font-size:14px;margin-right:6px">D</span>
-  <span id="s" style="font-size:30px">0</span> km/h | <span id="p">0</span>/326 ch<br>
-  <div style="margin-top:6px">🔋 <span id="b">85% (382 km)</span></div>
-  <div id="t" style="font-size:12px;color:#94a3b8;margin-top:4px">AUTOROUTE A1 • quattro</div>
-</div>
+<div id="cb">⚡ RECHARGE TOTALENERGIES</div>
+<div id="u"><b>AUDI A2 e-tron (326 ch)</b><br>Flèches/ZQSD: Piloter | Bas/S: Frein & Recul | V: Batterie 10%<br>Prenez la bretelle à droite (&lt;80 km/h) pour TotalEnergies</div>
+<div id="h"><span id="g" style="background:#bb0a30;padding:2px 6px;border-radius:4px">D</span> <span id="s" style="font-size:26px">0</span> km/h | <span id="p">0</span>/326 ch<br>🔋 <span id="b">85% (382 km)</span></div>
 <canvas id="c"></canvas>
 <script>
 const c=document.getElementById('c'),x=c.getContext('2d');
 let W=c.width=innerWidth,H=c.height=innerHeight;
 onresize=()=>{W=c.width=innerWidth;H=c.height=innerHeight};
-
-const segs=[],L=200,R=2200,totalSegs=1500,totalLen=totalSegs*L;
-for(let i=0;i<totalSegs;i++){
-  let cv=(i>80&&i<200)?1.6:(i>300&&i<450)?-2.0:0;
-  let mod=i%140,ramp=0,sign=0,ch=0;
-  if(i>40){
-    if(mod===65)sign=1;
-    if(mod>=80&&mod<95)ramp=(mod-80)/15;
-    if(mod>=95&&mod<=112)ramp=1.0;
-    if(mod>112&&mod<=125)ramp=1.0-(mod-112)/13;
-    if(mod===103)ch=1;
-  }
-  segs.push({i,cv,dk:Math.floor(i/3)%2==0,ramp,sign,ch,bl:i%10==0});
+const segs=[],L=200,R=2200,N=1500,TL=N*L;
+for(let i=0;i<N;i++){
+  let m=i%140,rm=0,sg=0,ch=0;
+  if(i>40){if(m==65)sg=1;if(m>=80&&m<95)rm=(m-80)/15;if(m>=95&&m<=112)rm=1;if(m>112&&m<=125)rm=1-(m-112)/13;if(m==103)ch=1;}
+  segs.push({i,cv:(i>80&&i<200)?1.5:(i>300&&i<450)?-1.8:0,dk:Math.floor(i/3)%2==0,rm,sg,ch,bl:i%10==0});
 }
-
-// Génération du trafic : Camions Mercedes (voie droite) & Voitures Audi (voies milieu et gauche)
-const traffic=[];
-const audiColors=["#9ca3af","#f8fafc","#1e293b","#dc2626","#3b82f6"];
-for(let j=0;j<28;j++){
-  const isTruck=(j%3===0); // 1 véhicule sur 3 est un camion Mercedes Actros
-  traffic.push({
-    type: isTruck ? 'mercedes' : 'audi',
-    z: (j*10500 + 8000) % totalLen,
-    lane: isTruck ? 0.62 : (j%2===0 ? 0.0 : -0.62), // Camions à droite, Audi au centre et à gauche
-    spd: isTruck ? 5400 : (7200 + (j%4)*900), // Camions à 90 km/h, Audi entre 120 et 165 km/h
-    color: isTruck ? "#e2e8f0" : audiColors[j%audiColors.length]
-  });
+const tr=[],ac=["#9ca3af","#fff","#1e293b","#dc2626"];
+for(let j=0;j<24;j++){
+  let tk=(j%3==0);
+  tr.push({tk,z:(j*12000+8000)%TL,ln:tk?.62:(j%2==0?0:-.62),sp:tk?5400:7800,cl:tk?"#f1f5f9":ac[j%4]});
 }
-
 let pos=0,px=0,spd=0,bat=85,last=performance.now();
-const k={};
-onkeydown=e=>{const key=e.key.toLowerCase();k[key]=1;if(key==='v')bat=10;};
-onkeyup=e=>k[e.key.toLowerCase()]=0;
-
-// Dessin d'un camion Mercedes-Benz Actros vu de l'arrière
-function drawMercedesTruck(cx,cy,sc){
-  const w=sc*1550,h=sc*2350;
-  if(w<6)return;
-  x.save();x.translate(cx,cy);
-  // Ombre
-  x.fillStyle="rgba(0,0,0,0.5)";x.fillRect(-w*.55,-h*.05,w*1.1,h*.08);
-  // Roues jumelées + bavettes Mercedes
-  x.fillStyle="#111";x.fillRect(-w*.48,-h*.22,w*.18,h*.22);x.fillRect(w*.30,-h*.22,w*.18,h*.22);
-  // Remorque frigorifique blanche
-  x.fillStyle="#f1f5f9";x.fillRect(-w*.5,-h,w,h*.82);
-  x.strokeStyle="#94a3b8";x.lineWidth=Math.max(1,w*.015);x.strokeRect(-w*.5,-h,w,h*.82);
-  // Portes arrière
-  x.beginPath();x.moveTo(0,-h);x.lineTo(0,-h*.18);x.stroke();
-  // Étoile Mercedes-Benz + texte ACTROS
-  if(w>28){
-    x.strokeStyle="#334155";x.lineWidth=Math.max(1.5,w*.02);
-    const r=w*.13,ey=-h*.62;
-    x.beginPath();x.arc(0,ey,r,0,Math.PI*2);x.stroke();
-    for(let a=0;a<3;a++){
-      const ang=-Math.PI/2+(a*Math.PI*2/3);
-      x.beginPath();x.moveTo(0,ey);x.lineTo(Math.cos(ang)*r,ey+Math.sin(ang)*r);x.stroke();
-    }
-    x.fillStyle="#1e293b";x.font="bold "+Math.max(7,Math.round(w*.11))+"px Arial";x.textAlign="center";
-    x.fillText("MERCEDES",0,-h*.83);
-  }
-  // Feux arrière rouges + feux de gabarit orange en haut
-  x.fillStyle="#ef4444";x.fillRect(-w*.46,-h*.16,w*.24,h*.06);x.fillRect(w*.22,-h*.16,w*.24,h*.06);
-  x.fillStyle="#f97316";x.fillRect(-w*.48,-h*.98,w*.08,h*.04);x.fillRect(w*.40,-h*.98,w*.08,h*.04);
-  x.restore();
-}
-
-// Dessin d'une autre voiture Audi vue de l'arrière
-function drawTrafficAudi(cx,cy,sc,color){
-  const w=sc*1350,h=sc*950;
-  if(w<6)return;
-  x.save();x.translate(cx,cy);
-  x.fillStyle="rgba(0,0,0,0.5)";x.beginPath();x.ellipse(0,0,w*.55,h*.12,0,0,Math.PI*2);x.fill();
-  // Pneus
-  x.fillStyle="#111";x.fillRect(-w*.46,-h*.32,w*.14,h*.32);x.fillRect(w*.32,-h*.32,w*.14,h*.32);
-  // Carrosserie
-  x.fillStyle=color;
-  x.beginPath();x.moveTo(-w*.48,-h*.1);x.lineTo(-w*.44,-h*.55);x.lineTo(-w*.30,-h*.95);x.lineTo(w*.30,-h*.95);x.lineTo(w*.44,-h*.55);x.lineTo(w*.48,-h*.1);x.fill();
-  // Vitre arrière
-  x.fillStyle="#0f172a";
-  x.beginPath();x.moveTo(-w*.27,-h*.9);x.lineTo(w*.27,-h*.9);x.lineTo(w*.36,-h*.58);x.lineTo(-w*.36,-h*.58);x.fill();
-  // Bandeau LED rouge Audi
-  x.fillStyle="#dc2626";x.fillRect(-w*.41,-h*.52,w*.82,h*.07);
-  // 4 anneaux Audi
-  if(w>24){
-    x.strokeStyle="#fff";x.lineWidth=Math.max(1,w*.015);
-    [-w*.09,-w*.03,w*.03,w*.09].forEach(rx=>{x.beginPath();x.arc(rx,-h*.38,w*.032,0,Math.PI*2);x.stroke();});
-  }
-  x.restore();
-}
-
+const k={};onkeydown=e=>{let v=e.key.toLowerCase();k[v]=1;if(v=='v')bat=10};onkeyup=e=>k[e.key.toLowerCase()]=0;
 function loop(now){
   const dt=Math.min(.05,(now-last)/1e3);last=now;
   const acc=k.arrowup||k.z,rev=k.arrowdown||k.s,brk=k[' '],lft=k.arrowleft||k.q,rgt=k.arrowright||k.d;
   let hp=0;
-
-  if(brk){spd*=.85;if(Math.abs(spd)<30)spd=0;}
-  else if(acc&&bat>0){spd+=8500*dt;hp=Math.min(326,Math.round(140+(spd/12600)*186));}
-  else if(rev&&bat>0){
-    if(spd>50){spd-=11000*dt;hp=-120;}
-    else{spd-=3500*dt;hp=85;}
-  }else{spd*=.97;if(Math.abs(spd)<15)spd=0;if(spd>200)hp=-40;}
-
+  if(brk){spd*=.85;if(Math.abs(spd)<30)spd=0}
+  else if(acc&&bat>0){spd+=8500*dt;hp=Math.min(326,Math.round(140+(spd/12600)*186))}
+  else if(rev&&bat>0){if(spd>50){spd-=11e3*dt;hp=-120}else{spd-=3500*dt;hp=85}}
+  else{spd*=.97;if(Math.abs(spd)<15)spd=0;if(spd>200)hp=-40}
   spd=Math.max(-2100,Math.min(spd,bat>0?12600:2100));
-  pos=(pos+spd*dt+totalLen)%totalLen;
-
-  const idx=Math.floor(pos/L)%segs.length,bs=segs[idx],rat=Math.abs(spd)/12600;
-  const maxRight=0.92+(bs.ramp*0.95);
-
+  pos=(pos+spd*dt+TL)%TL;
+  const idx=Math.floor(pos/L)%N,bs=segs[idx],rat=Math.abs(spd)/12600,maxR=.92+bs.rm*.95;
   const st=(lft?-1:(rgt?1:0));
-  if(Math.abs(spd)>10){
-    const revDir=spd>=0?1:-1;
-    px+=st*1.85*revDir*dt;
-  }
+  if(Math.abs(spd)>10)px+=st*1.85*(spd>=0?1:-1)*dt;
   px-=bs.cv*(spd/12600)*.4*dt;
-  if(px>maxRight)px=Math.max(maxRight,px-2.2*dt);
-  if(px<-0.92)px=-0.92;
-
-  // Mise à jour du trafic Audi & Mercedes + détection collision
-  traffic.forEach(v=>{
-    v.z=(v.z+v.spd*dt)%totalLen;
-    let dz=(v.z-pos+totalLen)%totalLen;
-    if(dz<350 && Math.abs(px-v.lane)<0.24 && spd>v.spd){
-      spd=v.spd*0.85; // Ralentissement au contact pour éviter de traverser le véhicule
-    }
-  });
-
-  // Recharge TotalEnergies sur la bretelle
+  if(px>maxR)px=Math.max(maxR,px-2.2*dt);if(px<-.92)px=-.92;
+  tr.forEach(v=>{v.z=(v.z+v.sp*dt)%TL;if((v.z-pos+TL)%TL<350&&Math.abs(px-v.ln)<.24&&spd>v.sp)spd=v.sp*.85});
   let chg=0;
-  for(let o=-7;o<=7;o++){
-    if(segs[(idx+o+segs.length)%segs.length].ch && px>0.95 && Math.abs(spd)<4800){
-      chg=1;break;
-    }
-  }
-
-  const banner=document.getElementById('chg-banner'),stTxt=document.getElementById('t');
-  if(chg){
-    bat=Math.min(100,bat+40*dt);
-    banner.style.display="block";
-    banner.innerText="⚡ RECHARGE TOTALENERGIES : "+Math.ceil(bat)+" % ("+Math.round(bat*4.5)+" km)";
-    stTxt.innerText="⚡ BRETELLE TOTALENERGIES (175 kW)";stTxt.style.color="#4ade80";
-  }else{
-    banner.style.display="none";
-    stTxt.style.color="#94a3b8";
-    if(px>0.95)stTxt.innerText="BRETELLE DE SORTIE • RALENTISSEZ";
-    else if(acc&&bat>0){bat=Math.max(0,bat-(.4+rat*rat*1.8)*dt);stTxt.innerText="AUTOROUTE PARIS • quattro";}
-    else if(spd<-10)stTxt.innerText="MARCHE ARRIÈRE";
-    else if(spd>200){bat=Math.min(100,bat+(rev?.4:.15)*rat*dt);stTxt.innerText="♻️ RÉGÉNÉRATION";}
-    else stTxt.innerText="READY • e-tron";
-  }
-
-  const gEl=document.getElementById('g');
-  if(spd<-10){gEl.innerText="R";gEl.style.background="#f59e0b";}
-  else{gEl.innerText="D";gEl.style.background="#bb0a30";}
-
-  document.getElementById('s').innerText=Math.abs(Math.round(spd/60));
-  document.getElementById('p').innerText=hp;
+  for(let o=-7;o<=7;o++)if(segs[(idx+o+N)%N].ch&&px>.95&&Math.abs(spd)<4800)chg=1;
+  const cb=document.getElementById('cb');
+  if(chg){bat=Math.min(100,bat+40*dt);cb.style.display="block";cb.innerText="⚡ RECHARGE TOTALENERGIES : "+Math.ceil(bat)+"%";}
+  else{cb.style.display="none";if(acc&&bat>0)bat=Math.max(0,bat-(.4+rat*rat*1.8)*dt);else if(spd>200)bat=Math.min(100,bat+(rev?.4:.15)*rat*dt);}
+  const g=document.getElementById('g');g.innerText=spd<-10?"R":"D";g.style.background=spd<-10?"#f59e0b":"#bb0a30";
+  document.getElementById('s').innerText=Math.abs(Math.round(spd/60));document.getElementById('p').innerText=hp;
   document.getElementById('b').innerText=Math.ceil(bat)+"% ("+Math.round(bat*4.5)+" km)";
-
-  // Ciel Paris
-  const sky=x.createLinearGradient(0,0,0,H*.5);
-  sky.addColorStop(0,"#0f172a");sky.addColorStop(.6,"#1e3a8a");sky.addColorStop(1,"#f97316");
+  const sky=x.createLinearGradient(0,0,0,H*.5);sky.addColorStop(0,"#0f172a");sky.addColorStop(.6,"#1e3a8a");sky.addColorStop(1,"#f97316");
   x.fillStyle=sky;x.fillRect(0,0,W,H*.5);
-
-  // Tour Eiffel
-  const ex=W*.5-px*110,ey=H*.5;
-  x.strokeStyle="#f59e0b";x.lineWidth=3;
+  const ex=W*.5-px*110,ey=H*.5;x.strokeStyle="#f59e0b";x.lineWidth=3;
   x.beginPath();x.moveTo(ex-55,ey);x.quadraticCurveTo(ex-22,ey-80,ex-8,ey-200);x.lineTo(ex+8,ey-200);x.quadraticCurveTo(ex+22,ey-80,ex+55,ey);x.stroke();
-  x.beginPath();x.arc(ex,ey,26,Math.PI,0);x.stroke();
-  x.fillStyle="#f59e0b";x.fillRect(ex-35,ey-55,70,5);x.fillRect(ex-19,ey-115,38,4);
-  x.beginPath();x.moveTo(ex,ey-200);x.lineTo(ex,ey-230);x.stroke();
-
+  x.beginPath();x.arc(ex,ey,26,Math.PI,0);x.stroke();x.fillStyle="#f59e0b";x.fillRect(ex-35,ey-55,70,5);x.fillRect(ex-19,ey-115,38,4);
   x.fillStyle="#334155";x.fillRect(0,H*.5,W,H*.5);
-
-  // Calcul des projections des segments + stockage des véhicules visibles
-  let my=H,rx=0,dx=-(bs.cv*((pos%L)/L));
-  const segProj=[];
-  for(let n=0;n<120;n++){
-    const s=segs[(idx+n)%segs.length],sNext=segs[(idx+n+1)%segs.length];
-    const z1=Math.max(10,((s.i-idx+segs.length)%segs.length)*L-(pos%L)),z2=z1+L,sc1=.84/z1,sc2=.84/z2;
-    const x1=W/2-sc1*((px*R)+rx)*W/2,y1=H/2+sc1*1e3*H/2,w1=sc1*R*W/2;
-    const x2=W/2-sc2*((px*R)+rx+dx)*W/2,y2=H/2+sc2*1e3*H/2,w2=sc2*R*W/2;
-    segProj[n]={x1,y1,w1,sc1};
-    rx+=dx;dx+=s.cv;if(y2>=my||y2>=y1)continue;
-
+  let my=H,rx=0,dx=-(bs.cv*((pos%L)/L)),pj=[];
+  for(let n=0;n<115;n++){
+    const s=segs[(idx+n)%N],sn=segs[(idx+n+1)%N],z1=Math.max(10,((s.i-idx+N)%N)*L-(pos%L)),z2=z1+L,sc1=.84/z1,sc2=.84/z2;
+    const x1=W/2-sc1*((px*R)+rx)*W/2,y1=H/2+sc1*1e3*H/2,w1=sc1*R*W/2,x2=W/2-sc2*((px*R)+rx+dx)*W/2,y2=H/2+sc2*1e3*H/2,w2=sc2*R*W/2;
+    pj[n]={x1,y1,w1,sc1};rx+=dx;dx+=s.cv;if(y2>=my||y2>=y1)continue;
     x.fillStyle=s.dk?"#3f6212":"#365314";x.fillRect(0,y2,W,y1-y2);
-
-    x.fillStyle=s.dk?"#1e293b":"#172033";
-    x.beginPath();x.moveTo(x1-w1,y1);x.lineTo(x1+w1,y1);x.lineTo(x2+w2,y2);x.lineTo(x2-w2,y2);x.fill();
-
-    if(s.dk){
-      x.fillStyle="#fff";
-      [-.33,.33].forEach(l=>{
+    x.fillStyle=s.dk?"#1e293b":"#172033";x.beginPath();x.moveTo(x1-w1,y1);x.lineTo(x1+w1,y1);x.lineTo(x2+w2,y2);x.lineTo(x2-w2,y2);x.fill();
+    if(s.dk){x.fillStyle="#fff";[-.33,.33].forEach(l=>{x.beginPath();x.moveTo(x1+w1*l-w1*.015,y1);x.lineTo(x1+w1*l+w1*.015,y1);x.lineTo(x2+w2*l+w2*.015,y2);x.lineTo(x2+w2*l-w2*.015,y2);x.fill()})}
+    if(s.rm>0||sn.rm>0){
+      x.fillStyle=s.dk?"#fff":"#334155";x.beginPath();x.moveTo(x1+w1,y1);x.lineTo(x1+w1*(1+s.rm*.18),y1);x.lineTo(x2+w2*(1+sn.rm*.18),y2);x.lineTo(x2+w2,y2);x.fill();
+      x.fillStyle=s.dk?"#273549":"#1e293b";x.beginPath();x.moveTo(x1+w1*(1+s.rm*.18),y1);x.lineTo(x1+w1*(1+s.rm*.95),y1);x.lineTo(x2+w2*(1+sn.rm*.95),y2);x.lineTo(x2+w2*(1+sn.rm*.18),y2);x.fill();
+    }
+    if(s.sg){const ss=sc1*14e4;if(ss>10&&ss<450){const sx=x1+w1*1.2;x.fillStyle="#1d4ed8";x.fillRect(sx-ss*.55,y1-ss*1.25,ss*1.1,ss*.42);if(ss>35){x.fillStyle="#fff";x.font="bold "+Math.round(ss*.09)+"px Arial";x.textAlign="center";x.fillText("SORTIE TOTALENERGIES",sx,y1-ss)}}}
+    if(s.ch){const cs=sc1*15e4;if(cs>8&&cs<450){const cx=x1+w1*2.15;x.fillStyle="rgba(237,28,36,.55)";x.beginPath();x.ellipse(x1+w1*1.55,y1,w1*.38,cs*.22,0,0,Math.PI*2);x.fill();x.fillStyle="#fff";x.fillRect(cx-cs*.5,y1-cs*.95,cs,cs*.14);x.fillStyle="#ed1c24";x.fillRect(cx-cs*.5,y1-cs*.85,cs,cs*.05);x.fillStyle="#fff";x.fillRect(cx-cs*.12,y1-cs*.5,cs*.24,cs*.5);if(cs>40){x.font="bold "+Math.round(cs*.09)+"px Arial";x.textAlign="center";x.fillText("TotalEnergies",cx,y1-cs*.88)}}}
+    my=y2;
+  }
+  for(let n=110;n>=1;n--){
+    const p=pj[n];if(!p)continue;const sIdx=(idx+n)%N;
+    tr.forEach(v=>{if(Math.floor(v.z/L)==sIdx){
+      const vx=p.x1+v.ln*p.w1,w=p.sc1*(v.tk?1550:1350),h=p.sc1*(v.tk?2350:950);
+      if(w>6){
+        x.save();x.translate(vx,p.y1);x.fillStyle="#111";x.fillRect(-w*.46,-h*.25,w*.16,h*.25);x.fillRect(w*.3,-h*.25,w*.16,h*.25);
+        x.fillStyle=v.cl;x.fillRect(-w*.48,-h,w*.96,h*.85);
+        if(v.tk&&w>25){x.strokeStyle="#334155";x.lineWidth=2;x.beginPath();x.arc(0,-h*.6,w*.14,0,Math.PI*2);x.stroke();x.fillStyle="#111";x.font="bold "+Math.round(w*.11)+"px Arial";x.textAlign="center";x.fillText("MERCEDES",0,-h*.82)}
+        else if(!v.tk){x.fillStyle="#0f172a";x.fillRect(-w*.34,-h*.9,w*.68,h*.35);x.fillStyle="#dc2626";x.fillRect(-w*.42,-h*.48,w*.84,h*.08)}
+        x.restore();
+      }
+    }});
+  }
+  x.save();x.translate(W/2+st*50,H-35);x.rotate(st*.06);
+  x.fillStyle="#111";x.fillRect(-115,-45,32,56);x.fillRect(83,-45,32,56);
+  x.fillStyle="#102a78";x.beginPath();x.moveTo(-112,-10);x.lineTo(-105,-78);x.lineTo(-74,-142);x.lineTo(74,-142);x.lineTo(105,-78);x.lineTo(112,-10);x.fill();
+  x.fillStyle="#0f172a";x.beginPath();x.moveTo(-68,-135);x.lineTo(68,-135);x.lineTo(86,-82);x.lineTo(-86,-82);x.fill();
+  x.fillStyle=(brk||rev)?"#ff2a44":"#d9001b";x.fillRect(-98,-76,196,9);
+  if(spd<-10){x.fillStyle="#fff";x.fillRect(-92,-75,18,6);x.fillRect(74,-75,18,6)}
+  x.strokeStyle="#fff";x.lineWidth=2.5;[-18,-6,6,18].forEach(r=>{x.beginPath();x.arc(r,-56,6.5,0,Math.PI*2);x.stroke()});
+  if(chg){x.strokeStyle="#4ade80";x.lineWidth=6;x.beginPath();x.moveTo(108,-55);x.quadraticCurveTo(155,-25,195,-65);x.stroke()}
+  x.restore();requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
