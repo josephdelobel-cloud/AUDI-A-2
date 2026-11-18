@@ -2,19 +2,19 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Audi A2 e-tron Paris</title>
+<title>Audi A2 e-tron Paris - Drive Select</title>
 <style>
 body{margin:0;overflow:hidden;background:#0f172a;font-family:Arial}
 canvas{display:block;width:100vw;height:100vh}
-#u{position:absolute;top:10px;left:10px;background:rgba(15,23,42,.9);color:#fff;padding:10px;border-radius:8px;border-left:4px solid #bb0a30;font-size:12px}
-#h{position:absolute;bottom:15px;right:15px;background:rgba(15,23,42,.92);color:#fff;padding:12px 16px;border-radius:10px;border-bottom:4px solid #bb0a30;font-size:14px;font-weight:bold}
-#cb{position:absolute;top:15px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 20px;border-radius:20px;font-weight:bold;display:none}
+#u{position:absolute;top:10px;left:10px;background:rgba(15,23,42,.92);color:#fff;padding:10px 12px;border-radius:8px;border-left:4px solid #bb0a30;font-size:12px;line-height:1.4}
+#h{position:absolute;bottom:15px;right:15px;background:rgba(15,23,42,.94);color:#fff;padding:12px 16px;border-radius:10px;border-bottom:4px solid #bb0a30;font-size:14px;font-weight:bold;min-width:235px}
+#cb{position:absolute;top:15px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 20px;border-radius:20px;font-weight:bold;display:none;z-index:20}
 </style>
 </head>
 <body>
 <div id="cb">⚡ RECHARGE TOTALENERGIES</div>
-<div id="u"><b>AUDI A2 e-tron (326 ch)</b><br>Flèches/ZQSD: Piloter | Bas/S: Frein & Recul<br>N: Nuit/Phares | H: Klaxon | V: Batterie 10%<br>Bretelle droite (&lt;80 km/h): TotalEnergies</div>
-<div id="h"><span id="g" style="background:#bb0a30;padding:2px 6px;border-radius:4px">D</span> <span id="s" style="font-size:26px">0</span> km/h | <span id="p">0</span>/326 ch<br>🔋 <span id="b">85% (382 km)</span><br>🛣️ <span id="o">0.0</span> km</div>
+<div id="u"><b>AUDI A2 e-tron • DRIVE SELECT</b><br>Flèches/ZQSD: Piloter | Bas/S: Frein & Recul<br><b>M</b>: Mode (Efficiency / Comfort / Dynamic)<br><b>N</b>: Nuit/Phares | <b>H</b>: Klaxon | <b>V</b>: Batterie 10%</div>
+<div id="h"><span id="g" style="background:#bb0a30;padding:2px 6px;border-radius:4px">D</span> <span id="s" style="font-size:26px">0</span> km/h | <span id="p">0</span>/<span id="mp">326</span> ch<br><div id="md" style="font-size:12px;color:#ef4444;margin:4px 0">MODE : DYNAMIC (210 km/h)</div>🔋 <span id="b">85% (382 km)</span><br>🛣️ <span id="o">0.0</span> km</div>
 <canvas id="c"></canvas>
 <script>
 const c=document.getElementById('c'),x=c.getContext('2d');
@@ -25,22 +25,42 @@ const segs=[],L=200,R=2200,N=1800,TL=N*L;
 for(let i=0;i<N;i++){let m=i%450,rm=0,sg=0,ch=0;if(i>120){if(m==340)sg=1;if(m>=360&&m<378)rm=(m-360)/18;if(m>=378&&m<=400)rm=1;if(m>400&&m<=418)rm=1-(m-400)/18;if(m==389)ch=1}segs.push({i,cv:(i>80&&i<220)?1.5:(i>420&&i<580)?-1.8:0,dk:Math.floor(i/3)%2==0,rm,sg,ch})}
 const tr=[],cl=["#9ca3af","#fff","#1e293b","#dc2626"];
 for(let j=0;j<28;j++){let tk=j%3==0;tr.push({tk,z:(j*12500+8000)%TL,ln:tk?.62:(j%2==0?0:-.62),sp:tk?5400:7800,cl:tk?"#f1f5f9":cl[j%4]})}
-let pos=0,px=0,spd=0,bat=85,dst=0,ngt=0,last=performance.now();
-const k={};onkeydown=e=>{let v=e.key.toLowerCase();k[v]=1;if(v=='v')bat=10;if(v=='n')ngt=1-ngt;if(v=='h'||v=='k')horn()};onkeyup=e=>{let v=e.key.toLowerCase();k[v]=0;if(v=='h'||v=='k')hn=0};
+const modes=[
+  {n:"EFFICIENCY (150 km/h)",ms:9000,hp:200,ac:5400,cn:.55,c:"#4ade80"},
+  {n:"COMFORT (180 km/h)",ms:10800,hp:260,ac:6800,cn:.95,c:"#60a5fa"},
+  {n:"DYNAMIC (210 km/h)",ms:12600,hp:326,ac:8500,cn:1.4,c:"#ef4444"}
+];
+let mi=2,pos=0,px=0,spd=0,bat=85,dst=0,ngt=0,last=performance.now();
+const k={};
+onkeydown=e=>{
+  let v=e.key.toLowerCase();k[v]=1;
+  if(v=='v')bat=10;if(v=='n')ngt=1-ngt;if(v=='h'||v=='k')horn();
+  if(v=='m'){mi=(mi+1)%3;let m=modes[mi],el=document.getElementById('md');el.innerText="MODE : "+m.n;el.style.color=m.c;document.getElementById('mp').innerText=m.hp;}
+};
+onkeyup=e=>{let v=e.key.toLowerCase();k[v]=0;if(v=='h'||v=='k')hn=0};
 function loop(now){
   const dt=Math.min(.05,(now-last)/1e3);last=now;
   const acc=k.arrowup||k.z,rev=k.arrowdown||k.s,brk=k[' '],lft=k.arrowleft||k.q,rgt=k.arrowright||k.d;
-  let hp=0;
-  if(brk){spd*=.85;if(Math.abs(spd)<30)spd=0}else if(acc&&bat>0){spd+=8500*dt;hp=Math.min(326,Math.round(140+(spd/12600)*186))}else if(rev&&bat>0){if(spd>50){spd-=11e3*dt;hp=-120}else{spd-=3500*dt;hp=85}}else{spd*=.97;if(Math.abs(spd)<15)spd=0;if(spd>200)hp=-40}
-  spd=Math.max(-2100,Math.min(spd,bat>0?12600:2100));pos=(pos+spd*dt+TL)%TL;dst+=Math.abs(spd/60)*(dt/3600)*12;
+  const m=modes[mi],maxS=bat>0?m.ms:2100;let hp=0;
+  if(brk){spd*=.85;if(Math.abs(spd)<30)spd=0}
+  else if(acc&&bat>0){spd+=m.ac*dt;hp=Math.min(m.hp,Math.round(m.hp*.42+(spd/m.ms)*m.hp*.58))}
+  else if(rev&&bat>0){if(spd>50){spd-=11e3*dt;hp=-120}else{spd-=3500*dt;hp=85}}
+  else{spd*=.97;if(Math.abs(spd)<15)spd=0;if(spd>200)hp=-40}
+  spd=Math.max(-2100,Math.min(spd,maxS));pos=(pos+spd*dt+TL)%TL;dst+=Math.abs(spd/60)*(dt/3600)*12;
   const idx=Math.floor(pos/L)%N,bs=segs[idx],rat=Math.abs(spd)/12600,maxR=.92+bs.rm*.95,st=lft?-1:(rgt?1:0);
   if(Math.abs(spd)>10)px+=st*1.85*(spd>=0?1:-1)*dt;px-=bs.cv*(spd/12600)*.4*dt;
   if(px>maxR)px=Math.max(maxR,px-2.2*dt);if(px<-.92)px=-.92;
   tr.forEach(v=>{v.z=(v.z+v.sp*dt)%TL;if((v.z-pos+TL)%TL<350&&Math.abs(px-v.ln)<.24&&spd>v.sp)spd=v.sp*.85});
   let chg=0;for(let o=-8;o<=8;o++)if(segs[(idx+o+N)%N].ch&&px>.95&&Math.abs(spd)<4800)chg=1;
   const cb=document.getElementById('cb');
-  if(chg){bat=Math.min(100,bat+40*dt);cb.style.display="block";cb.innerText="⚡ RECHARGE TOTALENERGIES : "+Math.ceil(bat)+"%"}
-  else{cb.style.display="none";if(acc&&bat>0)bat=Math.max(0,bat-(.35+rat*rat*1.5)*dt);else if(spd>200)bat=Math.min(100,bat+(rev?.4:.15)*rat*dt)}
+  if(chg){
+    let rate=bat>80?2.2:4.5; // Recharge plus lente et réaliste (ralentit après 80%)
+    bat=Math.min(100,bat+rate*dt);cb.style.display="block";cb.innerText="⚡ CHARGE TOTALENERGIES ("+(bat>80?"85 kW":"175 kW")+") : "+Math.ceil(bat)+"%";
+  }else{
+    cb.style.display="none";
+    if(acc&&bat>0)bat=Math.max(0,bat-(.35+rat*rat*1.5)*m.cn*dt);
+    else if(spd>200)bat=Math.min(100,bat+(rev?.4:.15)*rat*dt);
+  }
   const g=document.getElementById('g');g.innerText=spd<-10?"R":"D";g.style.background=spd<-10?"#f59e0b":"#bb0a30";
   document.getElementById('s').innerText=Math.abs(Math.round(spd/60));document.getElementById('p').innerText=hp;
   document.getElementById('b').innerText=Math.ceil(bat)+"% ("+Math.round(bat*4.5)+" km)";document.getElementById('o').innerText=dst.toFixed(1);
@@ -89,10 +109,3 @@ function loop(now){
   x.fillStyle=(brk||rev)?"#ff2a44":"#d9001b";x.fillRect(-98,-76,196,9);
   if(spd<-10){x.fillStyle="#fff";x.fillRect(-92,-75,18,6);x.fillRect(74,-75,18,6)}
   x.strokeStyle="#fff";x.lineWidth=2.5;[-18,-6,6,18].forEach(r=>{x.beginPath();x.arc(r,-56,6.5,0,Math.PI*2);x.stroke()});
-  if(chg){x.strokeStyle="#4ade80";x.lineWidth=6;x.beginPath();x.moveTo(108,-55);x.quadraticCurveTo(155,-25,195,-65);x.stroke()}
-  x.restore();requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
-</script>
-</body>
-</html>
