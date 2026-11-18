@@ -1,217 +1,207 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Audi A2 e-tron (326 ch) - Simulateur TotalEnergies</title>
-    <style>
-        * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1e293b; font-family: 'Segoe UI', Arial, sans-serif; }
-        canvas { display: block; width: 100vw; height: 100vh; }
-        
-        #ui {
-            position: absolute; top: 15px; left: 15px; color: white;
-            background: rgba(12, 16, 24, 0.88); padding: 15px 20px; border-radius: 12px;
-            border-left: 4px solid #bb0a30; box-shadow: 0 8px 25px rgba(0,0,0,0.5); z-index: 10;
-        }
-        h1 { margin: 0 0 4px 0; font-size: 18px; letter-spacing: 1px; }
-        .badge-hp { display: inline-block; background: #bb0a30; color: white; font-size: 11px; font-weight: bold; padding: 2px 7px; border-radius: 4px; margin-bottom: 8px; }
-        p { margin: 4px 0; font-size: 13px; color: #ccc; }
-        .btn-upload {
-            display: inline-block; margin-top: 10px; padding: 7px 12px;
-            background: #16389c; color: white; border-radius: 6px;
-            font-size: 12px; font-weight: bold; cursor: pointer; border: none;
-        }
-        .btn-upload:hover { background: #1e4bd1; }
-        input[type="file"] { display: none; }
-
-        #btn-settings {
-            position: absolute; top: 15px; right: 15px; color: white;
-            background: rgba(12, 16, 24, 0.88); padding: 10px 16px; border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.2); cursor: pointer; font-weight: bold;
-            font-size: 13px; z-index: 20;
-        }
-        #btn-settings:hover { background: #16389c; }
-
-        #settings-panel {
-            position: absolute; top: 60px; right: 15px; width: 280px; color: white;
-            background: rgba(12, 16, 24, 0.95); padding: 18px; border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-            z-index: 20; display: none;
-        }
-        .setting-item { margin-bottom: 14px; }
-        .setting-item label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
-        .setting-item select, .setting-item button {
-            width: 100%; padding: 7px; border-radius: 6px; background: #1e293b; color: white; border: 1px solid #334155;
-        }
-        .setting-item button { background: #16389c; cursor: pointer; font-weight: bold; border: none; padding: 9px; }
-
-        #hud {
-            position: absolute; bottom: 20px; right: 20px; color: white;
-            background: rgba(12, 16, 24, 0.92); padding: 16px 24px; border-radius: 14px;
-            border-bottom: 4px solid #bb0a30; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-            z-index: 10; min-width: 250px;
-        }
-        .hud-row { display: flex; justify-content: space-between; align-items: baseline; }
-        #speed { font-size: 38px; font-weight: bold; font-variant-numeric: tabular-nums; }
-        .unit { font-size: 14px; color: #5c85ff; }
-        
-        .power-meter { margin-top: 8px; }
-        .power-header { display: flex; justify-content: space-between; font-size: 12px; color: #cbd5e1; margin-bottom: 4px; font-weight: bold; }
-        #hp-val { color: #f87171; }
-        .hp-bar-bg { width: 100%; height: 6px; background: #262b36; border-radius: 3px; overflow: hidden; }
-        #hp-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #3b82f6, #ef4444); }
-
-        .battery-box { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.15); }
-        .bat-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; font-weight: bold; }
-        #range-km { color: #4ade80; font-size: 15px; }
-        .bar-bg { width: 100%; height: 10px; background: #262b36; border-radius: 5px; overflow: hidden; }
-        #bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); }
-        #power-status { font-size: 11px; margin-top: 6px; color: #94a3b8; text-align: right; }
-        
-        #alert-banner {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(220, 38, 38, 0.92); color: white; padding: 10px 22px;
-            border-radius: 30px; font-weight: bold; font-size: 14px; display: none; z-index: 20;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Audi A2 e-tron 326 ch</title>
+<style>
+  body { margin: 0; overflow: hidden; background: #8bb4d9; font-family: Arial, sans-serif; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+  #ui { position: absolute; top: 15px; left: 15px; background: rgba(15,23,42,0.88); color: white; padding: 15px; border-radius: 10px; border-left: 4px solid #bb0a30; }
+  h1 { margin: 0 0 5px 0; font-size: 18px; }
+  p { margin: 4px 0; font-size: 13px; color: #cbd5e1; }
+  #hud { position: absolute; bottom: 20px; right: 20px; background: rgba(15,23,42,0.92); color: white; padding: 15px 22px; border-radius: 12px; border-bottom: 4px solid #bb0a30; min-width: 220px; }
+  #speed { font-size: 34px; font-weight: bold; }
+  .unit { font-size: 14px; color: #60a5fa; }
+  .bar { width: 100%; height: 8px; background: #334155; border-radius: 4px; margin: 6px 0; overflow: hidden; }
+  #hp-fill { height: 100%; width: 0%; background: #ef4444; }
+  #bat-fill { height: 100%; width: 100%; background: #22c55e; }
+  .row { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; }
+</style>
 </head>
 <body>
-    <div id="alert-banner"></div>
+<div id="ui">
+  <h1>AUDI A2 e-tron (326 ch)</h1>
+  <p><strong>Flèches</strong> ou <strong>Z Q S D</strong> : Piloter</p>
+  <p><strong>Espace</strong> : Frein régénératif</p>
+  <p><strong>Stations TotalEnergies</strong> : Ralentir à droite</p>
+</div>
 
-    <div id="ui">
-        <h1>AUDI A2 e-tron</h1>
-        <div class="badge-hp">quattro • 326 ch (240 kW)</div>
-        <p><strong>Flèches</strong> ou <strong>Z Q S D</strong> : Piloter</p>
-        <p><strong>Espace</strong> : Freinage régénératif</p>
-        <p><strong>Stations TotalEnergies</strong> : Ralentissez à droite</p>
-        <label class="btn-upload">
-            📸 Importer ma photo Audi
-            <input type="file" id="imgUpload" accept="image/*">
-        </label>
-    </div>
+<div id="hud">
+  <div id="speed">0 <span class="unit">km/h</span></div>
+  <div class="row"><span>Puissance</span><span id="hp-txt">0 / 326 ch</span></div>
+  <div class="bar"><div id="hp-fill"></div></div>
+  <div class="row"><span>🔋 Autonomie</span><span id="bat-txt">100 % (450 km)</span></div>
+  <div class="bar"><div id="bat-fill"></div></div>
+  <div id="status" style="font-size:11px; color:#94a3b8; text-align:right; margin-top:4px;">quattro READY</div>
+</div>
 
-    <button id="btn-settings">⚙️ Paramètres & Écran</button>
-    <div id="settings-panel">
-        <div class="setting-item">
-            <label>Profil d'affichage</label>
-            <select id="screen-profile">
-                <option value="auto" selected>Écran Auto (Chromebook / iMac)</option>
-                <option value="dell">Moniteur Dell P2419H (1920x1080)</option>
-            </select>
-        </div>
-        <div class="setting-item">
-            <label>Audi Drive Select (326 ch)</label>
-            <select id="drive-mode">
-                <option value="efficiency">Efficiency (Bridage 150 km/h • 200 ch)</option>
-                <option value="comfort">Comfort (180 km/h • 260 ch)</option>
-                <option value="dynamic" selected>Dynamic (V-Max 210 km/h • 326 ch)</option>
-            </select>
-        </div>
-        <div class="setting-item">
-            <button id="btn-recharge">⚡ Recharger batterie à 100 %</button>
-        </div>
-        <div class="setting-item" style="margin-bottom:0;">
-            <button id="btn-fullscreen" style="background:#334155;">⛶ Plein écran</button>
-        </div>
-    </div>
+<canvas id="c"></canvas>
 
-    <div id="hud">
-        <div class="hud-row">
-            <span style="font-size:12px; color:#94a3b8;">VITESSE</span>
-            <div id="speed">0 <span class="unit">km/h</span></div>
-        </div>
-        
-        <div class="power-meter">
-            <div class="power-header">
-                <span>PUISSANCE MOTEUR</span>
-                <span id="hp-val">0 ch / 326 ch</span>
-            </div>
-            <div class="hp-bar-bg">
-                <div id="hp-bar-fill"></div>
-            </div>
-        </div>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+let W = c.width = window.innerWidth;
+let H = c.height = window.innerHeight;
+window.onresize = () => { W = c.width = window.innerWidth; H = c.height = window.innerHeight; };
 
-        <div class="battery-box">
-            <div class="bat-header">
-                <span id="bat-pct">🔋 100 %</span>
-                <span id="range-km">450 km</span>
-            </div>
-            <div class="bar-bg">
-                <div id="bar-fill"></div>
-            </div>
-            <div id="power-status">READY • e-tron quattro</div>
-        </div>
-    </div>
+const segLen = 200, roadW = 2000, camH = 1000, camD = 0.84, segs = [];
+for (let i = 0; i < 1200; i++) {
+  let curve = (i > 80 && i < 220) ? 2 : (i > 300 && i < 480) ? -2.5 : (i > 600 && i < 750) ? 1.8 : 0;
+  segs.push({
+    i: i, curve: curve,
+    y1: Math.sin(i / 45) * 250, y2: Math.sin((i + 1) / 45) * 250,
+    dark: Math.floor(i / 3) % 2 === 0,
+    charger: i > 30 && i % 130 === 0
+  });
+}
 
-    <canvas id="game"></canvas>
+let pos = 0, px = 0, spd = 0, bat = 100, last = performance.now();
+const keys = {};
+window.onkeydown = e => keys[e.key.toLowerCase()] = true;
+window.onkeyup = e => keys[e.key.toLowerCase()] = false;
 
-    <script>
-        (function() {
-            const canvas = document.getElementById('game');
-            const ctx = canvas.getContext('2d');
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
 
-            let width = 1280;
-            let height = 720;
-            let screenMode = 'auto';
+  const acc = keys['arrowup'] || keys['z'];
+  const brk = keys[' '] || keys['arrowdown'] || keys['s'];
+  const maxSpd = bat > 0 ? 12600 : 2100; // 210 km/h max
 
-            function resize() {
-                if (screenMode === 'dell') {
-                    width = 1920;
-                    height = 1080;
-                } else {
-                    width = Math.max(640, window.innerWidth || 1280);
-                    height = Math.max(480, window.innerHeight || 720);
-                }
-                canvas.width = width;
-                canvas.height = height;
-            }
-            window.addEventListener('resize', resize);
-            resize();
+  let hp = 0;
+  if (acc && bat > 0) {
+    spd += 8500 * dt;
+    hp = Math.min(326, Math.round(140 + (spd / 12600) * 186));
+  } else if (brk) {
+    spd -= 11000 * dt;
+    if (spd > 200) hp = -120;
+  } else {
+    spd -= 2500 * dt;
+    if (spd > 200) hp = -40;
+  }
+  spd = Math.max(0, Math.min(spd, maxSpd));
+  pos = (pos + spd * dt) % (segs.length * segLen);
 
-            const btnSettings = document.getElementById('btn-settings');
-            const settingsPanel = document.getElementById('settings-panel');
-            btnSettings.addEventListener('click', function() {
-                settingsPanel.style.display = (settingsPanel.style.display === 'block') ? 'none' : 'block';
-            });
+  const ratio = spd / 12600;
+  if (keys['arrowleft'] || keys['q']) px -= 2.1 * ratio * dt;
+  if (keys['arrowright'] || keys['d']) px += 2.1 * ratio * dt;
 
-            let drawDistance = 160;
-            document.getElementById('screen-profile').addEventListener('change', function(e) {
-                screenMode = e.target.value;
-                drawDistance = (screenMode === 'dell') ? 220 : 160;
-                resize();
-            });
+  const baseIdx = Math.floor(pos / segLen) % segs.length;
+  const baseSeg = segs[baseIdx];
+  px = Math.max(-2.2, Math.min(2.2, px - baseSeg.curve * ratio * 1.4 * dt));
 
-            let baseMaxSpeed = 12600;
-            let maxHorsepower = 326;
-            let accelPower = 8200;
-            let consumptionFactor = 1.25;
+  // Recharge TotalEnergies
+  let charging = false;
+  for (let o = -3; o <= 3; o++) {
+    let s = segs[(baseIdx + o + segs.length) % segs.length];
+    if (s.charger && px > 0.5 && spd < 4200) charging = true;
+  }
 
-            document.getElementById('drive-mode').addEventListener('change', function(e) {
-                if (e.target.value === 'efficiency') {
-                    baseMaxSpeed = 9000; maxHorsepower = 200; accelPower = 5200; consumptionFactor = 0.7;
-                } else if (e.target.value === 'comfort') {
-                    baseMaxSpeed = 10800; maxHorsepower = 260; accelPower = 6600; consumptionFactor = 0.95;
-                } else {
-                    baseMaxSpeed = 12600; maxHorsepower = 326; accelPower = 8200; consumptionFactor = 1.25;
-                }
-            });
+  if (charging) {
+    bat = Math.min(100, bat + 35 * dt);
+    document.getElementById('status').innerText = "⚡ RECHARGE TOTALENERGIES";
+  } else if (acc && bat > 0) {
+    bat = Math.max(0, bat - (0.4 + ratio * ratio * 1.8) * dt);
+    document.getElementById('status').innerText = hp > 280 ? "BOOST 326 ch" : "DRIVE quattro";
+  } else if (spd > 200) {
+    bat = Math.min(100, bat + (brk ? 0.4 : 0.15) * ratio * dt);
+    document.getElementById('status').innerText = "♻️ RÉGÉNÉRATION";
+  }
 
-            let battery = 100.0;
-            document.getElementById('btn-recharge').addEventListener('click', function() {
-                battery = 100.0;
-                settingsPanel.style.display = 'none';
-            });
+  // Mise à jour HUD
+  document.getElementById('speed').innerHTML = Math.round(spd / 60) + ' <span class="unit">km/h</span>';
+  document.getElementById('hp-txt').innerText = (hp >= 0 ? hp + ' / 326 ch' : hp + ' ch (REGEN)');
+  document.getElementById('hp-fill').style.width = Math.min(100, (Math.abs(hp) / 326) * 100) + '%';
+  document.getElementById('bat-txt').innerText = Math.ceil(bat) + ' % (' + Math.round((bat / 100) * 450) + ' km)';
+  document.getElementById('bat-fill').style.width = bat + '%';
 
-            document.getElementById('btn-fullscreen').addEventListener('click', function() {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(function(){});
-                } else {
-                    document.exitFullscreen().catch(function(){});
-                }
-                setTimeout(resize, 200);
-            });
+  // Ciel et sol
+  ctx.fillStyle = "#8bb4d9"; ctx.fillRect(0, 0, W, H * 0.5);
+  ctx.fillStyle = "#b5aa94"; ctx.fillRect(0, H * 0.5, W, H * 0.5);
+  ctx.fillStyle = "#4a7c9b"; ctx.fillRect(W * 0.55, H * 0.5, W * 0.45, H * 0.5);
 
-            let customCarImg = null;
-            document.getElementById('imgUpload').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
+  // Route 3D
+  let maxY = H, x = 0, dx = -(baseSeg.curve * ((pos % segLen) / segLen));
+  for (let n = 0; n < 150; n++) {
+    const s = segs[(baseIdx + n) % segs.length];
+    const z1 = Math.max(10, (s.i * segLen) - (pos - (s.i < baseIdx ? segs.length * segLen : 0)));
+    const z2 = z1 + segLen;
+    const sc1 = camD / z1, sc2 = camD / z2;
+
+    const x1 = W / 2 + sc1 * ((px * roadW) - x) * W / 2;
+    const y1 = H / 2 - sc1 * (s.y1 - baseSeg.y1 - camH) * H / 2;
+    const w1 = sc1 * roadW * W / 2;
+
+    const x2 = W / 2 + sc2 * ((px * roadW) - x - dx) * W / 2;
+    const y2 = H / 2 - sc2 * (s.y2 - baseSeg.y1 - camH) * H / 2;
+    const w2 = sc2 * roadW * W / 2;
+
+    x += dx; dx += s.curve;
+    if (y2 >= maxY || y2 >= y1) continue;
+
+    // Herbe & Vibreurs
+    ctx.fillStyle = s.dark ? "#b5aa94" : "#aba08a";
+    ctx.fillRect(0, y2, W, y1 - y2);
+
+    ctx.fillStyle = s.dark ? "#16389c" : "#ffffff";
+    ctx.beginPath(); ctx.moveTo(x1 - w1 * 1.12, y1); ctx.lineTo(x1 + w1 * 1.12, y1); ctx.lineTo(x2 + w2 * 1.12, y2); ctx.lineTo(x2 - w2 * 1.12, y2); ctx.fill();
+
+    // Asphalte
+    ctx.fillStyle = s.dark ? "#2b2d31" : "#25272b";
+    ctx.beginPath(); ctx.moveTo(x1 - w1, y1); ctx.lineTo(x1 + w1, y1); ctx.lineTo(x2 + w2, y2); ctx.lineTo(x2 - w2, y2); ctx.fill();
+
+    // Ligne blanche
+    if (s.dark) {
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath(); ctx.moveTo(x1 - w1 * 0.02, y1); ctx.lineTo(x1 + w1 * 0.02, y1); ctx.lineTo(x2 + w2 * 0.02, y2); ctx.lineTo(x2 - w2 * 0.02, y2); ctx.fill();
+    }
+
+    // Station TotalEnergies
+    if (s.charger) {
+      const cs = sc1 * 150000;
+      if (cs > 8 && cs < 450) {
+        const cx = x1 + w1 * 1.25;
+        ctx.fillStyle = "rgba(237,28,36,0.3)"; ctx.beginPath(); ctx.ellipse(x1 + w1 * 0.85, y1, w1 * 0.4, cs * 0.15, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.fillRect(cx - cs * 0.5, y1 - cs * 0.95, cs, cs * 0.14);
+        ctx.fillStyle = "#ed1c24"; ctx.fillRect(cx - cs * 0.5, y1 - cs * 0.85, cs, cs * 0.05);
+        ctx.fillStyle = "#e2e8f0"; ctx.fillRect(cx - cs * 0.4, y1 - cs * 0.8, cs * 0.06, cs * 0.8); ctx.fillRect(cx + cs * 0.34, y1 - cs * 0.8, cs * 0.06, cs * 0.8);
+        ctx.fillStyle = "#fff"; ctx.fillRect(cx - cs * 0.12, y1 - cs * 0.5, cs * 0.24, cs * 0.5);
+        ctx.fillStyle = "#ed1c24"; ctx.fillRect(cx - cs * 0.12, y1 - cs * 0.5, cs * 0.24, cs * 0.12);
+        if (cs > 40) { ctx.font = "bold " + Math.round(cs * 0.09) + "px Arial"; ctx.textAlign = "center"; ctx.fillText("TotalEnergies", cx, y1 - cs * 0.88); }
+      }
+    }
+    maxY = y2;
+  }
+
+  // Dessin Audi A2 e-tron bleu foncé
+  const bx = W / 2, by = H - 40 + (spd > 100 ? Math.sin(now * 0.05) * 1.5 : 0);
+  ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.beginPath(); ctx.ellipse(bx, by + 10, 145, 18, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#111"; ctx.fillRect(bx - 120, by - 35, 34, 45); ctx.fillRect(bx + 86, by - 35, 34, 45);
+  
+  // Carrosserie bleu foncé métallisé
+  ctx.fillStyle = "#102a78";
+  ctx.beginPath(); ctx.moveTo(bx - 118, by - 10); ctx.lineTo(bx - 110, by - 60); ctx.lineTo(bx - 78, by - 108); ctx.lineTo(bx + 78, by - 108); ctx.lineTo(bx + 110, by - 60); ctx.lineTo(bx + 118, by - 10); ctx.fill();
+  
+  // Vitre arrière
+  ctx.fillStyle = "#0f172a";
+  ctx.beginPath(); ctx.moveTo(bx - 72, by - 102); ctx.lineTo(bx + 72, by - 102); ctx.lineTo(bx + 90, by - 64); ctx.lineTo(bx - 90, by - 64); ctx.fill();
+  
+  // Bandeau LED rouge
+  ctx.fillStyle = brk ? "#ff2a44" : "#d9001b"; ctx.fillRect(bx - 102, by - 58, 204, 7);
+  
+  // 4 anneaux Audi
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+  [-15, -5, 5, 15].forEach(rx => { ctx.beginPath(); ctx.arc(bx + rx, by - 43, 5.5, 0, Math.PI * 2); ctx.stroke(); });
+
+  // Câble TotalEnergies si en charge
+  if (charging) {
+    ctx.strokeStyle = "#ed1c24"; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(bx + 112, by - 45); ctx.quadraticCurveTo(bx + 160, by - 20, bx + 205, by - 55); ctx.stroke();
+  }
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
