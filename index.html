@@ -2,15 +2,16 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Audi A2 e-tron - Simulateur 3D Réaliste</title>
+    <title>Audi A2 e-tron - Simulateur TotalEnergies</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', Arial, sans-serif; }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #8bb4d9; font-family: 'Segoe UI', Arial, sans-serif; }
         canvas { display: block; width: 100vw; height: 100vh; }
+        
         #ui {
             position: absolute; top: 15px; left: 15px; color: white;
-            background: rgba(12, 16, 24, 0.85); padding: 15px 20px; border-radius: 12px;
-            border-left: 4px solid #16389c; backdrop-filter: blur(8px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5); z-index: 10;
+            background: rgba(12, 16, 24, 0.88); padding: 15px 20px; border-radius: 12px;
+            border-left: 4px solid #16389c; box-shadow: 0 8px 25px rgba(0,0,0,0.5); z-index: 10;
         }
         h1 { margin: 0 0 6px 0; font-size: 18px; letter-spacing: 1px; }
         p { margin: 4px 0; font-size: 13px; color: #ccc; }
@@ -21,45 +22,167 @@
         }
         .btn-upload:hover { background: #1e4bd1; }
         input[type="file"] { display: none; }
+
+        #btn-settings {
+            position: absolute; top: 15px; right: 15px; color: white;
+            background: rgba(12, 16, 24, 0.88); padding: 10px 16px; border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2); cursor: pointer; font-weight: bold;
+            font-size: 13px; z-index: 20;
+        }
+        #btn-settings:hover { background: #16389c; }
+
+        #settings-panel {
+            position: absolute; top: 60px; right: 15px; width: 280px; color: white;
+            background: rgba(12, 16, 24, 0.95); padding: 18px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            z-index: 20; display: none;
+        }
+        .setting-item { margin-bottom: 14px; }
+        .setting-item label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
+        .setting-item select, .setting-item button {
+            width: 100%; padding: 7px; border-radius: 6px; background: #1e293b; color: white; border: 1px solid #334155;
+        }
+        .setting-item button { background: #16389c; cursor: pointer; font-weight: bold; border: none; padding: 9px; }
+
         #hud {
             position: absolute; bottom: 20px; right: 20px; color: white;
-            background: rgba(12, 16, 24, 0.85); padding: 15px 25px; border-radius: 12px;
-            border-bottom: 4px solid #16389c; backdrop-filter: blur(8px);
-            text-align: right; z-index: 10;
+            background: rgba(12, 16, 24, 0.9); padding: 16px 24px; border-radius: 14px;
+            border-bottom: 4px solid #16389c; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            z-index: 10; min-width: 230px;
         }
+        .hud-row { display: flex; justify-content: space-between; align-items: baseline; }
         #speed { font-size: 36px; font-weight: bold; font-variant-numeric: tabular-nums; }
         .unit { font-size: 14px; color: #5c85ff; }
-        .mode { font-size: 11px; color: #4ade80; letter-spacing: 1px; margin-top: 4px; }
+        
+        .battery-box { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.15); }
+        .bat-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; font-weight: bold; }
+        #range-km { color: #4ade80; font-size: 15px; }
+        .bar-bg { width: 100%; height: 10px; background: #262b36; border-radius: 5px; overflow: hidden; }
+        #bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); }
+        #power-status { font-size: 11px; margin-top: 6px; color: #94a3b8; text-align: right; }
+        
+        #alert-banner {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(220, 38, 38, 0.92); color: white; padding: 10px 22px;
+            border-radius: 30px; font-weight: bold; font-size: 14px; display: none; z-index: 20;
+        }
     </style>
 </head>
 <body>
+    <div id="alert-banner"></div>
+
     <div id="ui">
         <h1>AUDI A2 e-tron</h1>
         <p><strong>Flèches</strong> ou <strong>Z Q S D</strong> : Piloter</p>
-        <p><strong>Espace</strong> : Freiner (allume les feux stop)</p>
+        <p><strong>Espace</strong> : Freinage régénératif</p>
+        <p><strong>Stations TotalEnergies</strong> : Ralentissez à droite</p>
         <label class="btn-upload">
             📸 Importer ma photo Audi
             <input type="file" id="imgUpload" accept="image/*">
         </label>
     </div>
-    <div id="hud">
-        <div id="speed">0 <span class="unit">km/h</span></div>
-        <div class="mode">QUATTRO • DYNAMIC MODE</div>
+
+    <button id="btn-settings">⚙️ Paramètres & Écran</button>
+    <div id="settings-panel">
+        <div class="setting-item">
+            <label>Profil d'affichage</label>
+            <select id="screen-profile">
+                <option value="chromebook" selected>Écran Chromebook (Auto)</option>
+                <option value="dell">Moniteur Dell P2419H (1920x1080)</option>
+            </select>
+        </div>
+        <div class="setting-item">
+            <label>Audi Drive Select</label>
+            <select id="drive-mode">
+                <option value="efficiency">Efficiency (Autonomie max)</option>
+                <option value="comfort" selected>Comfort (Équilibré)</option>
+                <option value="dynamic">Dynamic (Vitesse max 180 km/h)</option>
+            </select>
+        </div>
+        <div class="setting-item">
+            <button id="btn-recharge">⚡ Recharger batterie à 100 %</button>
+        </div>
+        <div class="setting-item" style="margin-bottom:0;">
+            <button id="btn-fullscreen" style="background:#334155;">⛶ Plein écran</button>
+        </div>
     </div>
+
+    <div id="hud">
+        <div class="hud-row">
+            <span style="font-size:12px; color:#94a3b8;">VITESSE</span>
+            <div id="speed">0 <span class="unit">km/h</span></div>
+        </div>
+        <div class="battery-box">
+            <div class="bat-header">
+                <span id="bat-pct">🔋 100 %</span>
+                <span id="range-km">450 km</span>
+            </div>
+            <div class="bar-bg">
+                <div id="bar-fill"></div>
+            </div>
+            <div id="power-status">READY • e-tron</div>
+        </div>
+    </div>
+
     <canvas id="game"></canvas>
 
     <script>
         const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
 
+        let width = 1280;
+        let height = 720;
+        let screenMode = 'chromebook';
+
         function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            if (screenMode === 'dell') {
+                width = 1920;
+                height = 1080;
+            } else {
+                width = window.innerWidth || 1280;
+                height = window.innerHeight || 720;
+            }
+            canvas.width = width;
+            canvas.height = height;
         }
         window.addEventListener('resize', resize);
         resize();
 
-        // Importation optionnelle de la photo de l'utilisateur
+        const btnSettings = document.getElementById('btn-settings');
+        const settingsPanel = document.getElementById('settings-panel');
+        btnSettings.addEventListener('click', () => {
+            settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+        });
+
+        let drawDistance = 180;
+        document.getElementById('screen-profile').addEventListener('change', (e) => {
+            screenMode = e.target.value;
+            drawDistance = (screenMode === 'dell') ? 240 : 180;
+            resize();
+        });
+
+        let baseMaxSpeed = 11000;
+        let consumptionFactor = 1.0;
+        document.getElementById('drive-mode').addEventListener('change', (e) => {
+            if (e.target.value === 'efficiency') { baseMaxSpeed = 8500; consumptionFactor = 0.65; }
+            else if (e.target.value === 'comfort') { baseMaxSpeed = 11000; consumptionFactor = 1.0; }
+            else { baseMaxSpeed = 13500; consumptionFactor = 1.5; }
+        });
+
+        document.getElementById('btn-recharge').addEventListener('click', () => {
+            battery = 100.0;
+            settingsPanel.style.display = 'none';
+        });
+
+        document.getElementById('btn-fullscreen').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+            setTimeout(resize, 200);
+        });
+
         let customCarImg = null;
         document.getElementById('imgUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -73,154 +196,34 @@
             reader.readAsDataURL(file);
         });
 
-        // Paramètres de la route en perspective 3D
         const segmentLength = 200;
         const rumbleLength = 3;
         const roadWidth = 2000;
         const cameraHeight = 1000;
         const cameraDepth = 0.84;
-        const drawDistance = 250;
         const segments = [];
 
-        // Construction d'une route côtière infinie avec virages et collines
-        function buildRoad() {
-            for (let n = 0; n < 1500; n++) {
-                let curve = 0;
-                if (n > 100 && n < 250) curve = 2.5;
-                if (n > 350 && n < 550) curve = -3.2;
-                if (n > 650 && n < 800) curve = 1.8;
-                if (n > 950 && n < 1200) curve = -2.5;
+        for (let n = 0; n < 1500; n++) {
+            let curve = 0;
+            if (n > 100 && n < 250) curve = 2.2;
+            if (n > 350 && n < 550) curve = -2.8;
+            if (n > 650 && n < 800) curve = 1.6;
+            if (n > 950 && n < 1200) curve = -2.2;
 
-                let hill = Math.sin(n / 45) * 400;
+            let hill = Math.sin(n / 50) * 300;
+            let nextHill = Math.sin((n + 1) / 50) * 300;
 
-                segments.push({
-                    index: n,
-                    p1: { world: { y: hill, z: n * segmentLength }, camera: {}, screen: {} },
-                    p2: { world: { y: Math.sin((n + 1) / 45) * 400, z: (n + 1) * segmentLength }, camera: {}, screen: {} },
-                    curve: curve,
-                    color: Math.floor(n / rumbleLength) % 2 ? 
-                        { road: '#2b2d31', grass: '#b5aa94', rumble: '#16389c', lane: '#ffffff' } : 
-                        { road: '#25272b', grass: '#aba08a', rumble: '#ffffff', lane: '' },
-                    tree: (n % 12 === 0) ? (n % 24 === 0 ? -1 : 1) : 0
-                });
-            }
+            segments.push({
+                index: n,
+                p1: { world: { x: 0, y: hill, z: n * segmentLength }, camera: {}, screen: {} },
+                p2: { world: { x: 0, y: nextHill, z: (n + 1) * segmentLength }, camera: {}, screen: {} },
+                curve: curve,
+                color: Math.floor(n / rumbleLength) % 2 ? 
+                    { road: '#2b2d31', grass: '#b5aa94', rumble: '#16389c', lane: '#ffffff' } : 
+                    { road: '#25272b', grass: '#aba08a', rumble: '#ffffff', lane: '' },
+                tree: (n % 14 === 0) ? (n % 28 === 0 ? -1 : 1) : 0,
+                charger: (n > 35 && n % 150 === 0)
+            });
         }
-        buildRoad();
 
         const trackLength = segments.length * segmentLength;
-        let position = 0;
-        let playerX = 0;
-        let speed = 0;
-        const maxSpeed = 12000;
-
-        const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, z: false, s: false, q: false, d: false, " ": false };
-        window.addEventListener('keydown', e => { const k = e.key.toLowerCase(); if (keys.hasOwnProperty(k)) keys[k] = true; if (keys.hasOwnProperty(e.key)) keys[e.key] = true; });
-        window.addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (keys.hasOwnProperty(k)) keys[k] = false; if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
-
-        function project(p, cameraX, cameraY, cameraZ) {
-            p.camera.x = (p.world.x || 0) - cameraX;
-            p.camera.y = (p.world.y || 0) - cameraY;
-            p.camera.z = (p.world.z || 0) - cameraZ;
-            p.screen.scale = cameraDepth / p.camera.z;
-            p.screen.x = Math.round((canvas.width / 2) + (p.screen.scale * p.camera.x * canvas.width / 2));
-            p.screen.y = Math.round((canvas.height / 2) - (p.screen.scale * p.camera.y * canvas.height / 2));
-            p.screen.w = Math.round((p.screen.scale * roadWidth * canvas.width / 2));
-        }
-
-        function drawPolygon(x1, y1, x2, y2, x3, y3, x4, y4, color) {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.lineTo(x4, y4);
-            ctx.closePath(); ctx.fill();
-        }
-
-        // Dessin réaliste vue arrière 3/4 de l'Audi A2 e-tron bleue
-        function drawRealisticAudi(x, y, steer, braking, bounce) {
-            ctx.save();
-            ctx.translate(x, y + bounce);
-
-            // Si l'utilisateur a importé sa propre photo
-            if (customCarImg) {
-                const w = 340;
-                const h = (customCarImg.height / customCarImg.width) * w;
-                ctx.shadowColor = "rgba(0,0,0,0.6)";
-                ctx.shadowBlur = 20;
-                ctx.drawImage(customCarImg, -w/2, -h + 15, w, h);
-                ctx.restore();
-                return;
-            }
-
-            // Ombre portée réaliste sur l'asphalte
-            const shadowGrad = ctx.createRadialGradient(0, 10, 20, 0, 10, 150);
-            shadowGrad.addColorStop(0, "rgba(0,0,0,0.85)");
-            shadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-            ctx.fillStyle = shadowGrad;
-            ctx.beginPath(); ctx.ellipse(0, 12, 155, 22, 0, 0, Math.PI * 2); ctx.fill();
-
-            // Pneus larges + jantes bicolores
-            ctx.fillStyle = "#111";
-            ctx.beginPath(); ctx.roundRect(-125, -35, 36, 48, 8); ctx.fill();
-            ctx.beginPath(); ctx.roundRect(89, -35, 36, 48, 8); ctx.fill();
-
-            // Diffuseur arrière noir sport (Pack noir)
-            ctx.fillStyle = "#141619";
-            ctx.beginPath();
-            ctx.moveTo(-110, -5); ctx.lineTo(110, -5); ctx.lineTo(100, 10); ctx.lineTo(-100, 10);
-            ctx.closePath(); ctx.fill();
-
-            // Carrosserie principale (Dégradé bleu métallisé configuration)
-            const bodyGrad = ctx.createLinearGradient(-120, -90, 120, 0);
-            bodyGrad.addColorStop(0, "#0f2875");
-            bodyGrad.addColorStop(0.35, "#1e4bd1");
-            bodyGrad.addColorStop(0.5, "#3366ff");
-            bodyGrad.addColorStop(0.65, "#1e4bd1");
-            bodyGrad.addColorStop(1, "#0c1f5c");
-
-            ctx.fillStyle = bodyGrad;
-            ctx.beginPath();
-            ctx.moveTo(-122, -10);
-            ctx.lineTo(-115, -62);
-            ctx.lineTo(-82, -112);
-            ctx.lineTo(82, -112);
-            ctx.lineTo(115, -62);
-            ctx.lineTo(122, -10);
-            ctx.closePath();
-            ctx.fill();
-
-            // Lunette arrière teintée avec reflet ciel
-            const glassGrad = ctx.createLinearGradient(0, -108, 0, -65);
-            glassGrad.addColorStop(0, "#1c2838");
-            glassGrad.addColorStop(1, "#090c10");
-            ctx.fillStyle = glassGrad;
-            ctx.beginPath();
-            ctx.moveTo(-76, -106); ctx.lineTo(76, -106); ctx.lineTo(94, -66); ctx.lineTo(-94, -66);
-            ctx.closePath(); ctx.fill();
-
-            // Rétroviseurs noirs brillants
-            ctx.fillStyle = "#111";
-            ctx.beginPath(); ctx.ellipse(-118, -72, 14, 8, -0.2, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(118, -72, 14, 8, 0.2, 0, Math.PI*2); ctx.fill();
-
-            // Bandeau lumineux LED arrière Audi (s'intensifie au freinage)
-            ctx.shadowColor = braking ? "#ff0022" : "#aa0015";
-            ctx.shadowBlur = braking ? 25 : 10;
-            ctx.fillStyle = braking ? "#ff2a44" : "#d9001b";
-            ctx.beginPath();
-            ctx.roundRect(-106, -60, 212, 8, 4);
-            ctx.fill();
-
-            // Segments LED digitaux OLED sur les côtés
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(-102, -58, 22, 3);
-            ctx.fillRect(80, -58, 22, 3);
-            ctx.shadowBlur = 0;
-
-            // 4 anneaux Audi illuminés au centre
-            ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 2;
-            [-15, -5, 5, 15].forEach(rx => {
-                ctx.beginPath(); ctx.arc(rx, -44, 6, 0, Math.PI * 2); ctx.stroke();
-            });
-
-            // Plaque d'immatriculation "A2 e-tron"
-            ctx.fillStyle = "#f0f0f0";
