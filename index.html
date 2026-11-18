@@ -5,7 +5,7 @@
     <title>Audi A2 e-tron (326 ch) - Simulateur TotalEnergies</title>
     <style>
         * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #8bb4d9; font-family: 'Segoe UI', Arial, sans-serif; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1e293b; font-family: 'Segoe UI', Arial, sans-serif; }
         canvas { display: block; width: 100vw; height: 100vh; }
         
         #ui {
@@ -95,7 +95,7 @@
         <div class="setting-item">
             <label>Profil d'affichage</label>
             <select id="screen-profile">
-                <option value="chromebook" selected>Écran Chromebook (Auto)</option>
+                <option value="auto" selected>Écran Auto (Chromebook / iMac)</option>
                 <option value="dell">Moniteur Dell P2419H (1920x1080)</option>
             </select>
         </div>
@@ -146,83 +146,72 @@
     <canvas id="game"></canvas>
 
     <script>
-        const canvas = document.getElementById('game');
-        const ctx = canvas.getContext('2d');
+        (function() {
+            const canvas = document.getElementById('game');
+            const ctx = canvas.getContext('2d');
 
-        let width = 1280;
-        let height = 720;
-        let screenMode = 'chromebook';
+            let width = 1280;
+            let height = 720;
+            let screenMode = 'auto';
 
-        function resize() {
-            if (screenMode === 'dell') {
-                width = 1920;
-                height = 1080;
-            } else {
-                width = window.innerWidth || 1280;
-                height = window.innerHeight || 720;
+            function resize() {
+                if (screenMode === 'dell') {
+                    width = 1920;
+                    height = 1080;
+                } else {
+                    width = Math.max(640, window.innerWidth || 1280);
+                    height = Math.max(480, window.innerHeight || 720);
+                }
+                canvas.width = width;
+                canvas.height = height;
             }
-            canvas.width = width;
-            canvas.height = height;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        const btnSettings = document.getElementById('btn-settings');
-        const settingsPanel = document.getElementById('settings-panel');
-        btnSettings.addEventListener('click', () => {
-            settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
-        });
-
-        let drawDistance = 180;
-        document.getElementById('screen-profile').addEventListener('change', (e) => {
-            screenMode = e.target.value;
-            drawDistance = (screenMode === 'dell') ? 240 : 180;
+            window.addEventListener('resize', resize);
             resize();
-        });
 
-        let baseMaxSpeed = 12600;
-        let maxHorsepower = 326;
-        let accelPower = 8200;
-        let consumptionFactor = 1.25;
+            const btnSettings = document.getElementById('btn-settings');
+            const settingsPanel = document.getElementById('settings-panel');
+            btnSettings.addEventListener('click', function() {
+                settingsPanel.style.display = (settingsPanel.style.display === 'block') ? 'none' : 'block';
+            });
 
-        document.getElementById('drive-mode').addEventListener('change', (e) => {
-            if (e.target.value === 'efficiency') {
-                baseMaxSpeed = 9000;
-                maxHorsepower = 200;
-                accelPower = 5200;
-                consumptionFactor = 0.7;
-            } else if (e.target.value === 'comfort') {
-                baseMaxSpeed = 10800;
-                maxHorsepower = 260;
-                accelPower = 6600;
-                consumptionFactor = 0.95;
-            } else {
-                baseMaxSpeed = 12600;
-                maxHorsepower = 326;
-                accelPower = 8200;
-                consumptionFactor = 1.25;
-            }
-        });
+            let drawDistance = 160;
+            document.getElementById('screen-profile').addEventListener('change', function(e) {
+                screenMode = e.target.value;
+                drawDistance = (screenMode === 'dell') ? 220 : 160;
+                resize();
+            });
 
-        document.getElementById('btn-recharge').addEventListener('click', () => {
-            battery = 100.0;
-            settingsPanel.style.display = 'none';
-        });
+            let baseMaxSpeed = 12600;
+            let maxHorsepower = 326;
+            let accelPower = 8200;
+            let consumptionFactor = 1.25;
 
-        document.getElementById('btn-fullscreen').addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else {
-                document.exitFullscreen().catch(() => {});
-            }
-            setTimeout(resize, 200);
-        });
+            document.getElementById('drive-mode').addEventListener('change', function(e) {
+                if (e.target.value === 'efficiency') {
+                    baseMaxSpeed = 9000; maxHorsepower = 200; accelPower = 5200; consumptionFactor = 0.7;
+                } else if (e.target.value === 'comfort') {
+                    baseMaxSpeed = 10800; maxHorsepower = 260; accelPower = 6600; consumptionFactor = 0.95;
+                } else {
+                    baseMaxSpeed = 12600; maxHorsepower = 326; accelPower = 8200; consumptionFactor = 1.25;
+                }
+            });
 
-        let customCarImg = null;
-        document.getElementById('imgUpload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() { customCarImg = img; };
+            let battery = 100.0;
+            document.getElementById('btn-recharge').addEventListener('click', function() {
+                battery = 100.0;
+                settingsPanel.style.display = 'none';
+            });
+
+            document.getElementById('btn-fullscreen').addEventListener('click', function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(function(){});
+                } else {
+                    document.exitFullscreen().catch(function(){});
+                }
+                setTimeout(resize, 200);
+            });
+
+            let customCarImg = null;
+            document.getElementById('imgUpload').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
