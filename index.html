@@ -2,13 +2,14 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Audi A2 e-tron - Jeu 3D</title>
+    <title>Audi A2 e-tron - Simulateur</title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; background: #87ceeb; }
+        body { margin: 0; overflow: hidden; background: #1e242b; font-family: Arial, sans-serif; }
+        canvas { display: block; }
         #ui {
             position: absolute; top: 15px; left: 15px; color: white;
             background: rgba(15, 20, 30, 0.85); padding: 15px; border-radius: 10px;
-            border-left: 4px solid #16389c; z-index: 10;
+            border-left: 4px solid #16389c; user-select: none;
         }
         h1 { margin: 0 0 8px 0; font-size: 18px; }
         p { margin: 4px 0; font-size: 13px; color: #ddd; }
@@ -16,7 +17,7 @@
         #speedometer {
             position: absolute; bottom: 15px; right: 15px; color: white;
             background: rgba(15, 20, 30, 0.85); padding: 12px 20px; border-radius: 10px;
-            font-size: 26px; font-weight: bold; border-bottom: 4px solid #16389c; z-index: 10;
+            font-size: 26px; font-weight: bold; border-bottom: 4px solid #16389c; user-select: none;
         }
         span.unit { font-size: 14px; color: #5c85ff; }
     </style>
@@ -25,205 +26,228 @@
     <div id="ui">
         <h1>AUDI A2 e-tron</h1>
         <p><strong>Flèches</strong> ou <strong>Z Q S D</strong> : Conduire</p>
-        <p><strong>C</strong> : Changer caméra | <strong>Espace</strong> : Frein</p>
+        <p><strong>Espace</strong> : Freiner</p>
         <div class="controls">
             <label for="carColor">Peinture :</label>
             <input type="color" id="carColor" value="#16389c">
         </div>
     </div>
     <div id="speedometer">0 <span class="unit">km/h</span></div>
+    <canvas id="gameCanvas"></canvas>
 
-    <script src="https://unpkg.com"></script>
     <script>
-        window.onload = function() {
-            if (typeof THREE === 'undefined') {
-                document.body.innerHTML = "<h2 style='color:black;padding:20px;'>Erreur de chargement 3D. Vérifiez votre connexion internet et actualisez la page.</h2>";
-                return;
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let carColor = "#16389c";
+        document.getElementById('carColor').addEventListener('input', (e) => {
+            carColor = e.target.value;
+        });
+
+        // État de la voiture
+        const car = {
+            x: 0,
+            y: 0,
+            angle: 0,
+            speed: 0,
+            maxSpeed: 14,
+            accel: 0.25,
+            friction: 0.97,
+            turnSpeed: 0.045
+        };
+
+        const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, z: false, s: false, q: false, d: false, " ": false };
+        window.addEventListener('keydown', (e) => {
+            const k = e.key.toLowerCase();
+            if (keys.hasOwnProperty(k)) keys[k] = true;
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            const k = e.key.toLowerCase();
+            if (keys.hasOwnProperty(k)) keys[k] = false;
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+        });
+
+        // Génération de repères sur la carte (arbres, plots)
+        const props = [];
+        for (let i = 0; i < 150; i++) {
+            let px = (Math.random() - 0.5) * 3000;
+            if (Math.abs(px) < 180) px += (px > 0 ? 220 : -220); // Hors de la route
+            props.push({
+                x: px,
+                y: (Math.random() - 0.5) * 6000,
+                size: 18 + Math.random() * 20,
+                type: Math.random() > 0.3 ? 'tree' : 'rock'
+            });
+        }
+
+        function drawAudiA2Etron() {
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(car.angle);
+
+            // Ombre sous la voiture
+            ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+            ctx.beginPath();
+            ctx.roundRect(-24, -46, 48, 92, 12);
+            ctx.fill();
+
+            // Roues avant qui braquent
+            const steer = (keys.ArrowLeft || keys.q) ? -0.35 : ((keys.ArrowRight || keys.d) ? 0.35 : 0);
+            ctx.fillStyle = "#111";
+            // Avant gauche
+            ctx.save(); ctx.translate(-21, -26); ctx.rotate(steer);
+            ctx.fillRect(-4, -9, 8, 18); ctx.restore();
+            // Avant droit
+            ctx.save(); ctx.translate(21, -26); ctx.rotate(steer);
+            ctx.fillRect(-4, -9, 8, 18); ctx.restore();
+            // Arrière
+            ctx.fillRect(-25, 18, 8, 18);
+            ctx.fillRect(17, 18, 8, 18);
+
+            // Carrosserie principale (Bleu configuration)
+            ctx.fillStyle = carColor;
+            ctx.beginPath();
+            ctx.roundRect(-21, -44, 42, 88, 10);
+            ctx.fill();
+
+            // Reflet métallisé sur le capot
+            ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+            ctx.beginPath();
+            ctx.roundRect(-16, -40, 32, 22, 6);
+            ctx.fill();
+
+            // Rétroviseurs noirs (Pack noir)
+            ctx.fillStyle = "#141414";
+            ctx.fillRect(-26, -15, 6, 8);
+            ctx.fillRect(20, -15, 6, 8);
+
+            // Pare-brise et vitres teintées
+            ctx.fillStyle = "#12161f";
+            ctx.beginPath();
+            ctx.roundRect(-17, -18, 34, 48, 6);
+            ctx.fill();
+
+            // Toit couleur carrosserie
+            ctx.fillStyle = carColor;
+            ctx.beginPath();
+            ctx.roundRect(-15, -6, 30, 28, 4);
+            ctx.fill();
+
+            // Calandre avant noire & 4 anneaux
+            ctx.fillStyle = "#111";
+            ctx.fillRect(-13, -45, 26, 3);
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(-6, -45, 12, 1.5);
+
+            // Phares LED segmentés (traits blancs)
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(-19, -44, 4, 2);
+            ctx.fillRect(-14, -44, 3, 2);
+            ctx.fillRect(11, -44, 3, 2);
+            ctx.fillRect(15, -44, 4, 2);
+
+            // Faisceaux des phares sur la route
+            const grad = ctx.createLinearGradient(0, -44, 0, -180);
+            grad.addColorStop(0, "rgba(255, 255, 240, 0.35)");
+            grad.addColorStop(1, "rgba(255, 255, 240, 0)");
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(-18, -44); ctx.lineTo(-45, -180); ctx.lineTo(45, -180); ctx.lineTo(18, -44);
+            ctx.fill();
+
+            // Bandeau LED rouge arrière
+            ctx.fillStyle = "#ff0022";
+            ctx.fillRect(-18, 42, 36, 3);
+
+            ctx.restore();
+        }
+
+        function update() {
+            if (keys.ArrowUp || keys.z) car.speed += car.accel;
+            if (keys.ArrowDown || keys.s) car.speed -= car.accel;
+            if (keys[" "]) car.speed *= 0.88;
+
+            car.speed *= car.friction;
+            if (car.speed > car.maxSpeed) car.speed = car.maxSpeed;
+            if (car.speed < -car.maxSpeed / 2) car.speed = -car.maxSpeed / 2;
+
+            if (Math.abs(car.speed) > 0.1) {
+                const dir = car.speed > 0 ? 1 : -1;
+                if (keys.ArrowLeft || keys.q) car.angle -= car.turnSpeed * dir;
+                if (keys.ArrowRight || keys.d) car.angle += car.turnSpeed * dir;
             }
 
-            // 1. Scène et Caméra
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xdce6f2);
-            scene.fog = new THREE.Fog(0xdce6f2, 50, 220);
+            car.x += Math.sin(car.angle) * car.speed;
+            car.y -= Math.cos(car.angle) * car.speed;
 
-            const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "default" });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+            document.getElementById('speedometer').innerHTML = `${Math.abs(Math.round(car.speed * 13))} <span class="unit">km/h</span>`;
+        }
 
-            // 2. Lumières simples et rapides pour Chromebook
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-            scene.add(ambientLight);
+        function draw() {
+            // Fond paysage (herbe / sable côtier comme sur votre photo)
+            ctx.fillStyle = "#c2b8a3";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            dirLight.position.set(30, 60, 40);
-            scene.add(dirLight);
+            ctx.save();
+            // Caméra centrée sur la voiture
+            ctx.translate(canvas.width / 2 - car.x, canvas.height / 2 - car.y);
 
-            // 3. Décor (Sol, Mer et Route)
-            const ground = new THREE.Mesh(
-                new THREE.PlaneGeometry(2500, 2500),
-                new THREE.MeshLambertMaterial({ color: 0xc2b8a3 })
-            );
-            ground.rotation.x = -Math.PI / 2;
-            scene.add(ground);
+            // Mer sur la droite (comme sur la photo)
+            ctx.fillStyle = "#4a7c9b";
+            ctx.fillRect(600, -10000, 5000, 20000);
 
-            const water = new THREE.Mesh(
-                new THREE.PlaneGeometry(1000, 2500),
-                new THREE.MeshLambertMaterial({ color: 0x4a7c9b })
-            );
-            water.rotation.x = -Math.PI / 2;
-            water.position.set(520, 0.02, 0);
-            scene.add(water);
+            // Route asphaltée
+            ctx.fillStyle = "#2b2e33";
+            ctx.fillRect(-140, -10000, 280, 20000);
 
-            const road = new THREE.Mesh(
-                new THREE.PlaneGeometry(16, 2500),
-                new THREE.MeshLambertMaterial({ color: 0x26282c })
-            );
-            road.rotation.x = -Math.PI / 2;
-            road.position.y = 0.04;
-            scene.add(road);
+            // Bordures blanches de la route
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(-132, -10000, 5, 20000);
+            ctx.fillRect(127, -10000, 5, 20000);
 
-            for (let i = -1200; i < 1200; i += 16) {
-                const line = new THREE.Mesh(
-                    new THREE.PlaneGeometry(0.25, 6),
-                    new THREE.MeshBasicMaterial({ color: 0xffffff })
-                );
-                line.rotation.x = -Math.PI / 2;
-                line.position.set(0, 0.06, i);
-                scene.add(line);
+            // Lignes pointillées centrales
+            const startY = Math.floor((car.y - canvas.height) / 100) * 100;
+            const endY = startY + canvas.height * 2;
+            for (let y = startY; y < endY; y += 100) {
+                ctx.fillRect(-3, y, 6, 45);
             }
 
-            // 4. Modélisation Audi A2 e-tron (Bleu configuration)
-            const carGroup = new THREE.Group();
-            const bluePaint = new THREE.MeshPhongMaterial({ color: 0x16389c, shininess: 90 });
-            const blackTrim = new THREE.MeshLambertMaterial({ color: 0x141414 });
-            const glassMat = new THREE.MeshPhongMaterial({ color: 0x11151c, shininess: 100 });
-            const chromeMat = new THREE.MeshPhongMaterial({ color: 0xeeeeee, shininess: 100 });
-
-            // Bas de caisse noir
-            const skirt = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.14, 4.15), blackTrim);
-            skirt.position.y = 0.26;
-            carGroup.add(skirt);
-
-            // Carrosserie
-            const mainBody = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.58, 4.12), bluePaint);
-            mainBody.position.y = 0.62;
-            carGroup.add(mainBody);
-
-            // Capot
-            const hood = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.12, 1.15), bluePaint);
-            hood.position.set(0, 0.92, 1.42);
-            hood.rotation.x = 0.08;
-            carGroup.add(hood);
-
-            // Habitacle
-            const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.66, 0.54, 2.35), glassMat);
-            cabin.position.set(0, 1.16, -0.25);
-            carGroup.add(cabin);
-
-            // Toit bleu
-            const roof = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.07, 2.05), bluePaint);
-            roof.position.set(0, 1.44, -0.3);
-            carGroup.add(roof);
-
-            // Rétroviseurs noirs
-            [-0.98, 0.98].forEach(x => {
-                const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.11, 0.24), blackTrim);
-                mirror.position.set(x, 0.98, 0.65);
-                carGroup.add(mirror);
-            });
-
-            // Calandre Singleframe noire
-            const grille = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.42, 0.05), blackTrim);
-            grille.position.set(0, 0.58, 2.05);
-            carGroup.add(grille);
-
-            // Plaque "A2 e-tron"
-            const plateCanvas = document.createElement('canvas');
-            plateCanvas.width = 256; plateCanvas.height = 64;
-            const pCtx = plateCanvas.getContext('2d');
-            pCtx.fillStyle = '#ffffff'; pCtx.fillRect(0, 0, 256, 64);
-            pCtx.fillStyle = '#111111'; pCtx.font = 'bold 34px Arial'; pCtx.textAlign = 'center';
-            pCtx.fillText('A2 e-tron', 128, 44);
-            const plateTex = new THREE.CanvasTexture(plateCanvas);
-            const plate = new THREE.Mesh(
-                new THREE.PlaneGeometry(0.55, 0.13),
-                new THREE.MeshBasicMaterial({ map: plateTex })
-            );
-            plate.position.set(0, 0.5, 2.08);
-            carGroup.add(plate);
-
-            // 4 anneaux Audi
-            [-0.135, -0.045, 0.045, 0.135].forEach(xOffset => {
-                const ring = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.01, 8, 20), chromeMat);
-                ring.position.set(xOffset, 0.77, 2.075);
-                carGroup.add(ring);
-            });
-
-            // Phares LED segmentés
-            const ledMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            [-1, 1].forEach(side => {
-                for (let s = 0; s < 5; s++) {
-                    const segment = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.035, 0.04), ledMat);
-                    segment.position.set(side * (0.48 + s * 0.09), 0.85, 2.05 - s * 0.015);
-                    carGroup.add(segment);
+            // Décor (Arbres et rochers)
+            props.forEach(p => {
+                // Boucle infinie du décor autour du joueur
+                let dy = ((p.y - car.y + 3000) % 6000) - 3000 + car.y;
+                if (p.type === 'tree') {
+                    ctx.fillStyle = "rgba(0,0,0,0.2)";
+                    ctx.beginPath(); ctx.arc(p.x + 6, dy + 6, p.size, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = "#3a5a40";
+                    ctx.beginPath(); ctx.arc(p.x, dy, p.size, 0, Math.PI * 2); ctx.fill();
+                } else {
+                    ctx.fillStyle = "#8a817c";
+                    ctx.beginPath(); ctx.arc(p.x, dy, p.size * 0.7, 0, Math.PI * 2); ctx.fill();
                 }
             });
 
-            // Bandeau LED arrière
-            const tailLight = new THREE.Mesh(
-                new THREE.BoxGeometry(1.78, 0.07, 0.05),
-                new THREE.MeshBasicMaterial({ color: 0xff0022 })
-            );
-            tailLight.position.set(0, 0.86, -2.06);
-            carGroup.add(tailLight);
+            ctx.restore();
 
-            // Jantes bicolores 5 branches
-            const wheels = [];
-            const tireMat = new THREE.MeshLambertMaterial({ color: 0x181818 });
-            const alloyMat = new THREE.MeshPhongMaterial({ color: 0xd9dde2, shininess: 80 });
+            // Dessiner l'Audi A2 e-tron au centre
+            drawAudiA2Etron();
+        }
 
-            const wheelCoords = [
-                [-0.94, 0.39, 1.32], [0.94, 0.39, 1.32],
-                [-0.94, 0.39, -1.32], [0.94, 0.39, -1.32]
-            ];
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
 
-            wheelCoords.forEach(pos => {
-                const wheelUnit = new THREE.Group();
-                wheelUnit.position.set(...pos);
-
-                const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.39, 0.39, 0.24, 24), tireMat);
-                tire.rotation.z = Math.PI / 2;
-                wheelUnit.add(tire);
-
-                const rimBase = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.29, 0.25, 20), blackTrim);
-                rimBase.rotation.z = Math.PI / 2;
-                wheelUnit.add(rimBase);
-
-                for (let b = 0; b < 5; b++) {
-                    const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.11, 0.24), alloyMat);
-                    const angleSpoke = (b * Math.PI * 2) / 5;
-                    spoke.position.set(0, Math.cos(angleSpoke) * 0.14, Math.sin(angleSpoke) * 0.14);
-                    spoke.rotation.x = angleSpoke;
-                    wheelUnit.add(spoke);
-                }
-
-                carGroup.add(wheelUnit);
-                wheels.push(wheelUnit);
-            });
-
-            scene.add(carGroup);
-
-            // Couleur dynamique
-            document.getElementById('carColor').addEventListener('input', (e) => {
-                bluePaint.color.set(e.target.value);
-            });
-
-            // 5. Contrôles
-            const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, z: false, s: false, q: false, d: false, " ": false };
-            let camMode = 0;
-
-            window.addEventListener('keydown', (e) => {
-                const k = e.key.toLowerCase();
-                if (keys.hasOwnProperty(k)) keys[k] = true;
-                if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+        loop();
+    </script>
+</body>
+</html>
