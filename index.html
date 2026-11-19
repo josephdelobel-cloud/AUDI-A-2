@@ -13,24 +13,16 @@
     background: #0f172a;
     font-family: 'Segoe UI', Arial, sans-serif;
   }
-  #scene {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-  #bg {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.1s ease-out, filter 0.3s ease;
+  canvas {
     display: block;
+    width: 100%;
+    height: 100%;
   }
   #u {
     position: absolute;
     top: 16px;
     left: 16px;
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(15, 23, 42, 0.86);
     backdrop-filter: blur(8px);
     color: #fff;
     padding: 12px 18px;
@@ -51,23 +43,8 @@
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.25);
     border-left: 6px solid #ef4444;
-    min-width: 245px;
+    min-width: 235px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  }
-  #chgBtn {
-    margin-top: 10px;
-    width: 100%;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    background: #16a34a;
-    color: #fff;
-    font-weight: bold;
-    font-size: 13px;
-    cursor: pointer;
-  }
-  #chgBtn.active {
-    background: #dc2626;
   }
   #gtDial {
     position: absolute;
@@ -85,21 +62,7 @@
     justify-content: center;
     color: #fff;
   }
-  #alert {
-    position: absolute;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #dc2626;
-    color: #fff;
-    padding: 10px 22px;
-    border-radius: 20px;
-    font-weight: bold;
-    font-size: 14px;
-    display: none;
-    border: 2px solid #fff;
-  }
-  #chgBanner {
+  #cb {
     position: absolute;
     top: 16px;
     left: 50%;
@@ -107,9 +70,9 @@
     background: #16a34a;
     color: #fff;
     padding: 10px 24px;
-    border-radius: 20px;
+    border-radius: 22px;
+    font-size: 15px;
     font-weight: bold;
-    font-size: 14px;
     display: none;
     border: 2px solid #fff;
     box-shadow: 0 6px 20px rgba(22, 163, 74, 0.5);
@@ -117,142 +80,140 @@
 </style>
 </head>
 <body>
-<div id="scene">
-  <img id="bg" alt="Audi A2 e-tron">
-  <div id="alert">⚠️ BATTERIE FAIBLE • APPUYEZ SUR [C] POUR RECHARGER</div>
-  <div id="chgBanner">⚡ BORNE TOTALENERGIES 300 kW • RECHARGE EN COURS</div>
-  <div id="u">
-    <b style="color:#60a5fa">AUDI A2 e-tron • AUTOROUTE A1 / A25</b><br>
-    <b>Flèches / ZQSD</b> : Accélérer & Tourner | <b>Bas / S / Espace</b> : Freiner<br>
-    <b>C</b> : Borne Recharge | <b>M</b> : Mode | <b>N</b> : Nuit/Jour | <b>R</b> : Reset km | <b>V</b> : Bat 10%
-  </div>
-  <div id="batBox">
-    <div id="md" style="font-size:13px;font-weight:bold;color:#ef4444;letter-spacing:0.5px">DYNAMIC • 326 ch</div>
-    <div style="font-size:22px;font-weight:bold;margin:4px 0">🔋 <span id="b">85%</span> <span style="font-size:15px;color:#cbd5e1;font-weight:normal">(<span id="rng">382</span> km)</span></div>
-    <div style="width:100%;height:7px;background:#334155;border-radius:4px;overflow:hidden;margin:6px 0">
-      <div id="bBar" style="width:85%;height:100%;background:#4ade80;transition:width 0.2s"></div>
-    </div>
-    <div style="font-size:14px;color:#e2e8f0">🛣️ Distance : <b id="o">0.0</b> km</div>
-    <button id="chgBtn" onclick="toggleCharge()">⚡ Borne TotalEnergies (C)</button>
-  </div>
-  <div id="gtDial">
-    <div id="g" style="background:#dc2626;padding:2px 10px;border-radius:6px;font-weight:bold;font-size:15px;margin-bottom:2px">D</div>
-    <div id="s" style="font-size:44px;font-weight:900;line-height:1">0</div>
-    <div style="font-size:12px;color:#94a3b8;letter-spacing:1px">KM/H</div>
-    <div style="font-size:11px;color:#60a5fa;margin-top:4px"><span id="p">0</span> ch</div>
-  </div>
+<div id="cb">⚡ RECHARGE TOTALENERGIES 300 kW</div>
+<div id="u">
+  <b style="color:#60a5fa">AUDI A2 e-tron • AUTOROUTE A1 / A25 (326 ch)</b><br>
+  <b>Flèches / ZQSD</b> : Conduire | <b>Bas / S</b> : Frein & Recul<br>
+  <b>M</b> : Mode | <b>N</b> : Nuit/Jour | <b>H</b> : Klaxon | <b>R</b> : Reset km | <b>V</b> : Bat 10%
 </div>
+<div id="batBox">
+  <div id="md" style="font-size:13px;font-weight:bold;color:#ef4444;letter-spacing:0.5px">DYNAMIC • 326 ch</div>
+  <div style="font-size:22px;font-weight:bold;margin:4px 0">🔋 <span id="b">85%</span> <span style="font-size:15px;color:#cbd5e1;font-weight:normal">(<span id="rng">382</span> km)</span></div>
+  <div style="width:100%;height:7px;background:#334155;border-radius:4px;overflow:hidden;margin:6px 0">
+    <div id="bBar" style="width:85%;height:100%;background:#4ade80;transition:width 0.2s"></div>
+  </div>
+  <div style="font-size:14px;color:#e2e8f0">🛣️ Distance : <b id="o">0.0</b> km</div>
+</div>
+<div id="gtDial">
+  <div id="g" style="background:#dc2626;padding:2px 10px;border-radius:6px;font-weight:bold;font-size:15px;margin-bottom:2px">D</div>
+  <div id="s" style="font-size:44px;font-weight:900;line-height:1">0</div>
+  <div style="font-size:12px;color:#94a3b8;letter-spacing:1px">KM/H</div>
+  <div style="font-size:11px;color:#60a5fa;margin-top:4px"><span id="p">0</span> ch</div>
+</div>
+<canvas id="c" width="1280" height="720"></canvas>
 
 <script>
-const bg = document.getElementById('bg');
-const imgs = ['d%C3%A9cor.png', 'décor.png', 'decor.png', 'decor.jpg', 'image.png', 'image.jpg', 'Decor.png', 'Décor.png'];
-let idx = 0;
-bg.onerror = () => {
-  idx++;
-  if (idx < imgs.length) bg.src = imgs[idx];
-  else bg.onerror = null;
-};
-bg.src = imgs[0];
+const c = document.getElementById('c'), x = c.getContext('2d');
+let W = 1280, H = 720, ac = null, hn = 0, mi = 2, pos = 0, px = 0, spd = 0, bat = 85, dst = 0, ngt = 0, last = performance.now();
+function fit() { W = c.width = innerWidth || 1280; H = c.height = innerHeight || 720; }
+window.addEventListener('resize', fit); fit();
 
-const modes = [
-  { n: "EFFICIENCY • 200 ch", max: 150, hp: 200, acc: 28, c: "#4ade80" },
-  { n: "COMFORT • 260 ch", max: 180, hp: 260, acc: 38, c: "#60a5fa" },
-  { n: "DYNAMIC • 326 ch", max: 210, hp: 326, acc: 52, c: "#ef4444" }
-];
-
-let mi = 2, spd = 0, bat = 85, dst = 0.0, tilt = 0, ngt = false, charging = false, last = performance.now();
-const k = {};
-
-function toggleCharge() {
-  charging = !charging;
-  const btn = document.getElementById('chgBtn');
-  if (charging) {
-    spd = 0;
-    btn.innerText = "🔌 Débrancher la borne (C)";
-    btn.classList.add('active');
-  } else {
-    btn.innerText = "⚡ Borne TotalEnergies (C)";
-    btn.classList.remove('active');
-  }
+function horn() {
+  if (hn) return; hn = 1;
+  try {
+    if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sawtooth'; o.frequency.value = 440;
+    g.gain.setValueAtTime(0.12, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.3);
+    o.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(ac.currentTime + 0.3);
+  } catch (e) {}
 }
 
+const segs = [], L = 200, R = 2200, N = 600, TL = N * L;
+for (let i = 0; i < N; i++) {
+  let rm = 0, sg = 0, ch = 0, trA = 0, gt = 0;
+  if (i === 40) gt = 1;
+  if (i === 340) gt = 2;
+  if (i === 85) sg = 1;
+  if (i >= 95 && i < 125) rm = (i - 95) / 30;
+  if (i >= 125 && i <= 275) rm = 1;
+  if (i > 275 && i <= 305) rm = 1 - (i - 275) / 30;
+  if (i === 205) ch = 1;
+  if (i % 4 === 0) trA = 1;
+  segs.push({ i, cv: (i > 320 && i < 430) ? 1.1 : (i > 460 && i < 560) ? -1.3 : 0, dk: Math.floor(i / 3) % 2 === 0, rm, sg, ch, trA, gt });
+}
+
+const tr = [
+  { tk: 1, z: 1200, ln: 0.64, sp: 4800, cl: "#f8fafc" },
+  { tk: 0, z: 2200, ln: -0.62, sp: 7600, cl: "#1e293b" },
+  { tk: 0, z: 3600, ln: 0.0, sp: 8800, cl: "#b91c1c" },
+  { tk: 1, z: 5400, ln: 0.64, sp: 4600, cl: "#e2e8f0" },
+  { tk: 0, z: 2800, ln: -1.4, sp: -6500, cl: "#f1f5f9" },
+  { tk: 1, z: 4800, ln: -1.45, sp: -5200, cl: "#ffffff" }
+];
+
+const modes = [
+  { n: "EFFICIENCY • 200 ch", ms: 9000, hp: 200, ac: 5400, cn: 0.85, c: "#4ade80" },
+  { n: "COMFORT • 260 ch", ms: 10800, hp: 260, ac: 6800, cn: 1, c: "#60a5fa" },
+  { n: "DYNAMIC • 326 ch", ms: 12600, hp: 326, ac: 8500, cn: 1.15, c: "#ef4444" }
+];
+
+const k = {};
 window.addEventListener('keydown', e => {
-  const v = e.key.toLowerCase();
-  k[v] = 1;
+  const v = e.key.toLowerCase(); k[v] = 1;
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(v)) e.preventDefault();
   if (v === 'v') bat = 10;
+  if (v === 'n') ngt = 1 - ngt;
+  if (v === 'h' || v === 'k') horn();
   if (v === 'r') dst = 0;
-  if (v === 'c') toggleCharge();
-  if (v === 'n') {
-    ngt = !ngt;
-    bg.style.filter = ngt ? "brightness(0.35) contrast(1.25)" : "none";
-  }
   if (v === 'm') {
-    mi = (mi + 1) % 3;
-    const m = modes[mi];
-    const el = document.getElementById('md');
-    el.innerText = m.n;
-    el.style.color = m.c;
+    mi = (mi + 1) % 3; const m = modes[mi], el = document.getElementById('md');
+    el.innerText = m.n; el.style.color = m.c;
     document.getElementById('batBox').style.borderLeftColor = m.c;
   }
 });
+window.addEventListener('keyup', e => { const v = e.key.toLowerCase(); k[v] = 0; if (v === 'h' || v === 'k') hn = 0; });
 
-window.addEventListener('keyup', e => {
-  k[e.key.toLowerCase()] = 0;
-});
-
-function loop(now) {
-  const dt = Math.min(0.05, (now - last) / 1000);
-  last = now;
-
-  const acc = k.arrowup || k.z;
-  const brk = k.arrowdown || k.s || k[' '];
-  const lft = k.arrowleft || k.q;
-  const rgt = k.arrowright || k.d;
-  const m = modes[mi];
-
-  if (charging) {
-    spd = 0;
-    bat = Math.min(100, bat + 4.5 * dt);
-    if (acc) toggleCharge();
-  } else if (brk) {
-    spd = Math.max(0, spd - 95 * dt);
-  } else if (acc && bat > 0) {
-    spd = Math.min(m.max, spd + m.acc * dt);
-  } else {
-    spd = Math.max(0, spd - 18 * dt);
+function drawGantry(x1, y1, w1, sc1, tp) {
+  const gs = sc1 * 22e4; if (gs < 8 || gs > 900) return;
+  const h = gs * 2.1;
+  const pg = x.createLinearGradient(0, y1 - h, 0, y1); pg.addColorStop(0, "#cbd5e1"); pg.addColorStop(1, "#475569");
+  x.fillStyle = pg; x.fillRect(x1 - w1 * 1.02, y1 - h, gs * 0.09, h); x.fillRect(x1 + w1 * 0.98, y1 - h, gs * 0.09, h);
+  x.fillStyle = "#94a3b8"; x.fillRect(x1 - w1 * 1.02, y1 - h * 0.86, w1 * 2.04, gs * 0.06); x.fillRect(x1 - w1 * 1.02, y1 - h * 0.66, w1 * 2.04, gs * 0.06);
+  const bw = w1 * 0.86, bh = gs * 0.52, bx = x1 - w1 * 0.16, by = y1 - h * 0.98;
+  x.fillStyle = "#dc2626"; x.fillRect(bx - gs * 0.18, by - gs * 0.13, gs * 0.36, gs * 0.13);
+  x.fillStyle = "#1d4ed8"; x.fillRect(bx - bw * 0.5, by, bw, bh); x.strokeStyle = "#fff"; x.lineWidth = 2.5; x.strokeRect(bx - bw * 0.5, by, bw, bh);
+  const rw = w1 * 0.64, rx = x1 + w1 * 0.64;
+  x.fillStyle = "#dc2626"; x.fillRect(rx - gs * 0.18, by - gs * 0.05, gs * 0.36, gs * 0.12);
+  x.fillStyle = "#1d4ed8"; x.fillRect(rx - rw * 0.5, by + gs * 0.07, rw, gs * 0.44); x.strokeRect(rx - rw * 0.5, by + gs * 0.07, rw, gs * 0.44);
+  if (gs > 24) {
+    const lb = tp === 1 ? ["A 1", "Lille", "Paris", "A 25", "Arras", "Lens"] : ["A 6", "Lyon", "Marseille", "A 10", "Bordeaux", "Nantes"];
+    x.fillStyle = "#fff"; x.textAlign = "center"; x.font = "bold " + Math.round(gs * 0.08) + "px Arial";
+    x.fillText(lb, bx, by - gs * 0.035); x.fillText(lb, rx, by + gs * 0.04);
+    x.font = "bold " + Math.round(gs * 0.11) + "px Arial";
+    x.fillText(lb, bx, by + bh * 0.4); x.fillText(lb, bx, by + bh * 0.72);
+    x.fillText("⬇     ⬇     ⬇", bx, by + bh * 0.94);
+    x.fillText(lb, rx, by + gs * 0.24); x.fillText(lb, rx, by + gs * 0.38); x.fillText("↗", rx + rw * 0.26, by + gs * 0.47);
   }
-
-  const st = (lft ? -1 : 0) + (rgt ? 1 : 0);
-  tilt += (st * 2.5 - tilt) * 6 * dt;
-
-  const zoom = 1 + (spd / 210) * 0.08 + Math.sin(now * 0.03) * (spd > 5 ? 0.002 : 0);
-  bg.style.transform = `scale(${zoom}) translateX(${-tilt * 12}px) rotate(${tilt * 0.4}deg)`;
-
-  const kmStep = (spd * dt) / 3600;
-  dst += kmStep;
-  if (!charging && acc && bat > 0) {
-    bat = Math.max(0, bat - kmStep * 0.22);
-  }
-
-  const bPct = Math.ceil(bat);
-  document.getElementById('s').innerText = Math.round(spd);
-  document.getElementById('p').innerText = (!charging && acc) ? Math.round((spd / m.max) * m.hp) : 0;
-  document.getElementById('b').innerText = bPct + "%";
-  document.getElementById('rng').innerText = Math.round(bat * 4.5);
-  document.getElementById('o').innerText = dst.toFixed(1);
-
-  const bBar = document.getElementById('bBar');
-  bBar.style.width = bPct + "%";
-  bBar.style.background = charging ? "#38bdf8" : (bPct < 20 ? "#ef4444" : (bPct < 50 ? "#f59e0b" : "#4ade80"));
-
-  document.getElementById('chgBanner').style.display = charging ? "block" : "none";
-  document.getElementById('alert').style.display = (!charging && bPct <= 15) ? "block" : "none";
-
-  requestAnimationFrame(loop);
 }
 
-requestAnimationFrame(loop);
-</script>
-</body>
-</html>
+function drawStation(x1, y1, w1, sc1) {
+  const cs = sc1 * 22e4; if (cs < 6 || cs > 650) return;
+  const cx = x1 + w1 * 2.25;
+  x.fillStyle = "rgba(0,0,0,0.35)"; x.beginPath(); x.ellipse(x1 + w1 * 1.9, y1 + 4, w1 * 0.85, cs * 0.35, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#cbd5e1"; x.beginPath(); x.ellipse(x1 + w1 * 1.9, y1, w1 * 0.78, cs * 0.32, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#dc2626"; x.beginPath(); x.ellipse(x1 + w1 * 1.72, y1, w1 * 0.48, cs * 0.22, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#f8fafc"; x.fillRect(cx - cs * 0.85, y1 - cs * 1.12, cs * 1.7, cs * 0.2);
+  x.fillStyle = "#ef4444"; x.fillRect(cx - cs * 0.85, y1 - cs * 0.96, cs * 1.7, cs * 0.07);
+  x.fillStyle = "#2563eb"; x.fillRect(cx - cs * 0.85, y1 - cs * 0.89, cs * 1.7, cs * 0.04);
+  [-0.55, 0.55].forEach(p => { x.fillStyle = "#334155"; x.fillRect(cx + cs * p - cs * 0.05, y1 - cs * 0.85, cs * 0.1, cs * 0.85); });
+  [-0.25, 0.25].forEach(b => {
+    x.fillStyle = "#f8fafc"; x.fillRect(cx + cs * b - cs * 0.09, y1 - cs * 0.58, cs * 0.18, cs * 0.58);
+    x.fillStyle = "#0f172a"; x.fillRect(cx + cs * b - cs * 0.06, y1 - cs * 0.52, cs * 0.12, cs * 0.16);
+    x.fillStyle = "#38bdf8"; x.fillRect(cx + cs * b - cs * 0.04, y1 - cs * 0.5, cs * 0.08, cs * 0.08);
+  });
+  if (cs > 28) { x.fillStyle = "#0f172a"; x.font = "bold " + Math.round(cs * 0.1) + "px Arial"; x.textAlign = "center"; x.fillText("TotalEnergies • 300 kW", cx, y1 - cs * 1.01); }
+}
+
+function drawTree(tx, y1, ts) {
+  if (ts < 6 || ts > 650) return;
+  x.fillStyle = "#451a03"; x.fillRect(tx - ts * 0.06, y1 - ts * 0.5, ts * 0.12, ts * 0.5);
+  const fg = x.createRadialGradient(tx - ts * 0.1, y1 - ts * 0.85, ts * 0.05, tx, y1 - ts * 0.75, ts * 0.46);
+  fg.addColorStop(0, ngt ? "#065f46" : "#4d7c0f"); fg.addColorStop(0.6, ngt ? "#064e3b" : "#365314"); fg.addColorStop(1, ngt ? "#022c22" : "#1a2e05");
+  x.fillStyle = fg; x.beginPath(); x.arc(tx, y1 - ts * 0.78, ts * 0.42, 0, Math.PI * 2); x.arc(tx - ts * 0.24, y1 - ts * 0.64, ts * 0.28, 0, Math.PI * 2); x.arc(tx + ts * 0.24, y1 - ts * 0.64, ts * 0.28, 0, Math.PI * 2); x.fill();
+}
+
+function drawCarDirect(v) {
+  if (v.z < 250 || v.z > 18000) return;
