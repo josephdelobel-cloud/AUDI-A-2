@@ -36,13 +36,14 @@ function horn(){if(hn)return;hn=1;try{if(!ac)ac=new(window.AudioContext||window.
 const segs=new Array(),L=200,R=2200,N=2400,TL=N*L;
 for(let i=0;i<N;i++){let rm=0,sg=0,ch=0,trA=0,gt=0;if(i==80||i==1280)gt=1;if(i==650||i==1850)gt=2;if(i==960)sg=1;if(i>=985&&i<1020)rm=(i-985)/35;if(i>=1020&&i<=1180)rm=1;if(i>1180&&i<=1215)rm=1-(i-1180)/35;if(i==1100)ch=1;if(i%3==0)trA=1;let cv=0;if(i>240&&i<380)cv=.75;if(i>740&&i<880)cv=-.85;if(i>1450&&i<1620)cv=.75;segs.push({i,cv,dk:Math.floor(i/3)%2==0,rm,sg,ch,trA,gt})}
 const tr=new Array(
-  {tk:1,z:950,ln:.68,sp:4200,cl:"#f8fafc"},
-  {tk:0,z:1900,ln:.24,sp:6800,cl:"#1e293b"},
-  {tk:1,z:3100,ln:.68,sp:4400,cl:"#e2e8f0"},
-  {tk:0,z:4600,ln:.24,sp:7400,cl:"#b91c1c"},
-  {tk:1,z:6200,ln:.68,sp:4100,cl:"#ffffff"},
-  {tk:1,z:2400,ln:-.68,sp:-4800,cl:"#f1f5f9"},
-  {tk:0,z:4200,ln:-.25,sp:-6200,cl:"#334155"}
+  {tk:1,z:850,ln:.65,sp:3600,cl:"#f8fafc"},
+  {tk:0,z:1600,ln:.22,sp:5800,cl:"#1e293b"},
+  {tk:1,z:2500,ln:.65,sp:3800,cl:"#e2e8f0"},
+  {tk:1,z:3900,ln:.65,sp:3500,cl:"#f1f5f9"},
+  {tk:0,z:5200,ln:.24,sp:6400,cl:"#b91c1c"},
+  {tk:1,z:6800,ln:.65,sp:3700,cl:"#ffffff"},
+  {tk:1,z:1800,ln:-.65,sp:-4200,cl:"#f8fafc"},
+  {tk:0,z:3400,ln:-.24,sp:-5600,cl:"#334155"}
 );
 const modes=new Array(
   {n:"EFFICIENCY • 200 ch (ECO+)",ms:9000,hp:200,ac:5400,cn:.52,maxKm:560,c:"#4ade80"},
@@ -146,7 +147,7 @@ function loop(now){
   spd=Math.max(-2100,Math.min(spd,maxS));pos=(pos+spd*dt+TL)%TL;const stepKm=Math.abs(spd/60)*(dt/3600)*10;dst+=stepKm;
   const idx=Math.floor(pos/L)%N,bs=segs[idx],maxR=.88+bs.rm*1.45,st=lft?-1:(rgt?1:0);
   if(Math.abs(spd)>10)px+=st*1.85*(spd>=0?1:-1)*dt;px-=bs.cv*(spd/12600)*.35*dt;if(px>maxR)px=Math.max(maxR,px-2.2*dt);if(px<-.88)px=-.88;
-  tr.forEach(v=>{v.z+=(v.sp-spd)*dt;if(v.z<240)v.z=8800;if(v.z>9500)v.z=320});
+  tr.forEach(v=>{v.z+=(v.sp-spd)*dt;if(v.z<260)v.z=8500;if(v.z>8800)v.z=320});
   let chg=0;for(let o=-18;o<=18;o++)if(segs[(idx+o+N)%N].ch&&px>1.02&&Math.abs(spd)<4800)chg=1;
   const cb=document.getElementById('cb');
   if(chg){bat=Math.min(100,bat+(bat>80?2.2:4.5)*dt);cb.style.display="block";cb.innerText="⚡ RECHARGE TOTALENERGIES : "+Math.ceil(bat)+"%"}else{cb.style.display="none";if(acc&&bat>0)bat=Math.max(0,bat-(stepKm/4.5)*m.cn);else if(spd>200)bat=Math.min(100,bat+(stepKm/4.5)*(rev?.4:.15))}
