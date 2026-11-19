@@ -41,7 +41,7 @@ function makeRoadTex(){
   for(let i=0;i<24000;i++){ctx.fillStyle=Math.random()>.5?'rgba(255,255,255,.04)':'rgba(0,0,0,.09)';ctx.fillRect(Math.random()*1024,Math.random()*1024,2,2)}
   ctx.fillStyle='#475569';ctx.fillRect(0,0,36,1024);ctx.fillRect(988,0,36,1024);
   ctx.fillStyle='#f8fafc';ctx.fillRect(46,0,12,1024);ctx.fillRect(966,0,12,1024);ctx.fillRect(488,0,12,1024);ctx.fillRect(524,0,12,1024);
-  const lanes=[200,345,675,820];
+  const lanes=new Array(200,340,670,810);
   lanes.forEach(lx=>{for(let y=0;y<1024;y+=128)ctx.fillRect(lx,y,10,64)});
   const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,160);return t;
 }
@@ -50,7 +50,7 @@ const road=new THREE.Mesh(new THREE.PlaneGeometry(34,4000),roadMat);road.rotatio
 const grassMat=new THREE.MeshStandardMaterial({color:0x365314,roughness:0.95});
 const grass=new THREE.Mesh(new THREE.PlaneGeometry(2400,4000),grassMat);grass.rotation.x=-Math.PI/2;grass.position.y=-0.05;scene.add(grass);
 const railMat=new THREE.MeshStandardMaterial({color:0xcbd5e1,metalness:0.75,roughness:0.3});
-const rails=[-17.2,0];
+const rails=new Array(-17.2,0);
 rails.forEach(rx=>{const r=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.45,4000),railMat);r.position.set(rx,0.65,0);scene.add(r)});
 function makeSignTex(l1,l2,l3,sub){
   const cv=document.createElement('canvas');cv.width=512;cv.height=256;const ctx=cv.getContext('2d');
@@ -61,7 +61,7 @@ function makeSignTex(l1,l2,l3,sub){
 }
 const envObjs=[];
 for(let z=-50;z>-3800;z-=45){
-  [-1,1].forEach(sd=>{
+  new Array(-1,1).forEach(sd=>{
     if(sd===1&&z<-1950&&z>-2450)return;
     const grp=new THREE.Group();
     const trk=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.42,3.2,8),new THREE.MeshStandardMaterial({color:0x451a03,roughness:0.9}));trk.position.y=1.6;grp.add(trk);
@@ -71,7 +71,7 @@ for(let z=-50;z>-3800;z-=45){
 }
 function addGantry(z,t1,t2,t3,sub){
   const g=new THREE.Group();
-  [-16.8,16.8].forEach(px=>{const p=new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.38,9.5,12),railMat);p.position.set(px,4.75,0);g.add(p)});
+  new Array(-16.8,16.8).forEach(px=>{const p=new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.38,9.5,12),railMat);p.position.set(px,4.75,0);g.add(p)});
   const bar=new THREE.Mesh(new THREE.BoxGeometry(34.2,0.45,0.45),railMat);bar.position.set(0,8.4,0);g.add(bar);
   const brd=new THREE.Mesh(new THREE.BoxGeometry(11.5,5.4,0.25),new THREE.MeshStandardMaterial({map:makeSignTex(t1,t2,t3,sub)}));brd.position.set(7.5,7.8,0.2);g.add(brd);
   g.position.z=z;scene.add(g);envObjs.push(g);
@@ -86,17 +86,17 @@ const shopGlass=new THREE.Mesh(new THREE.BoxGeometry(0.2,3.2,18),new THREE.MeshP
 const shopBand=new THREE.Mesh(new THREE.BoxGeometry(10.3,0.7,24.3),new THREE.MeshStandardMaterial({color:0xdc2626}));shopBand.position.set(38,4.6,-12);stGrp.add(shopBand);
 const canopy=new THREE.Mesh(new THREE.BoxGeometry(12,0.7,14),new THREE.MeshStandardMaterial({color:0xf8fafc,roughness:0.3}));canopy.position.set(23,5.2,14);stGrp.add(canopy);
 const stripe=new THREE.Mesh(new THREE.BoxGeometry(12.2,0.35,14.2),new THREE.MeshStandardMaterial({color:0xdc2626}));stripe.position.set(23,4.85,14);stGrp.add(stripe);
-[18,28].forEach(bx=>{const p=new THREE.Mesh(new THREE.BoxGeometry(0.45,4.8,0.45),railMat);p.position.set(bx,2.4,14);stGrp.add(p)});
-[10,14,18].forEach(cz=>{
+new Array(18,28).forEach(bx=>{const p=new THREE.Mesh(new THREE.BoxGeometry(0.45,4.8,0.45),railMat);p.position.set(bx,2.4,14);stGrp.add(p)});
+new Array(10,14,18).forEach(cz=>{
   const ch=new THREE.Mesh(new THREE.BoxGeometry(0.9,2.3,0.7),new THREE.MeshStandardMaterial({color:0xffffff}));ch.position.set(23,1.15,cz);stGrp.add(ch);
   const scr=new THREE.Mesh(new THREE.BoxGeometry(0.94,0.45,0.4),new THREE.MeshBasicMaterial({color:0x38bdf8}));scr.position.set(23,1.65,cz);stGrp.add(scr);
 });
-[-28,-16,-4].forEach(tz=>{
+new Array(-28,-16,-4).forEach(tz=>{
   const tbl=new THREE.Mesh(new THREE.BoxGeometry(1.6,0.12,2.2),new THREE.MeshStandardMaterial({color:0x78350f,roughness:0.8}));tbl.position.set(30,0.85,tz);stGrp.add(tbl);
-  [-0.95,0.95].forEach(bn=>{const b=new THREE.Mesh(new THREE.BoxGeometry(0.45,0.1,2.2),new THREE.MeshStandardMaterial({color:0x92400e}));b.position.set(30+bn,0.48,tz);stGrp.add(b)});
+  new Array(-0.95,0.95).forEach(bn=>{const b=new THREE.Mesh(new THREE.BoxGeometry(0.45,0.1,2.2),new THREE.MeshStandardMaterial({color:0x92400e}));b.position.set(30+bn,0.48,tz);stGrp.add(b)});
   const bin=new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.28,0.95,12),new THREE.MeshStandardMaterial({color:0x15803d}));bin.position.set(31.8,0.48,tz+1.4);stGrp.add(bin);
 });
-[-48,-35].forEach(pz=>{
+new Array(-48,-35).forEach(pz=>{
   const pk=new THREE.Group();
   const trl=new THREE.Mesh(new THREE.BoxGeometry(2.55,3.3,11.5),new THREE.MeshStandardMaterial({color:0xf8fafc,roughness:0.4}));trl.position.set(0,2.15,0);pk.add(trl);
   const cab=new THREE.Mesh(new THREE.BoxGeometry(2.5,3.0,2.4),new THREE.MeshStandardMaterial({color:0x1e293b,metalness:0.6,roughness:0.3}));cab.position.set(0,1.95,-6.9);pk.add(cab);
@@ -114,10 +114,10 @@ const oledMat=new THREE.MeshBasicMaterial({color:0xdc2626});
 const lightBar=new THREE.Mesh(new THREE.BoxGeometry(1.94,0.09,0.08),oledMat);lightBar.position.set(0,0.86,2.13);audi.add(lightBar);
 const diff=new THREE.Mesh(new THREE.BoxGeometry(1.96,0.24,0.12),trimMat);diff.position.set(0,0.34,2.12);audi.add(diff);
 const wheels=[];
-[[-0.96,1.32],[0.96,1.32],[-0.96,-1.32],[0.96,-1.32]].forEach(([wx,wz])=>{
+new Array(-0.96,0.96).forEach(wx=>{new Array(1.32,-1.32).forEach(wz=>{
   const w=new THREE.Mesh(new THREE.CylinderGeometry(0.36,0.36,0.26,20),new THREE.MeshStandardMaterial({color:0x09090b,roughness:0.7}));
   w.rotation.z=Math.PI/2;w.position.set(wx,0.36,wz);audi.add(w);wheels.push(w);
-});
+})});
 audi.position.set(8.5,0,0);scene.add(audi);
 
 const traffic=[];
